@@ -1,7 +1,6 @@
 # Temporarily removing UI
-UI/
-UI*
-
+ui/pages
+ui
 # Editors
 .vscode/
 .idea/
