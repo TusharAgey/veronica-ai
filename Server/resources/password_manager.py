@@ -4,6 +4,7 @@ from sqlalchemy import insert, select, MetaData
 from database_resource import getDatabaseEngine, getPasswordTable
 from domain.UserPassword import UserPassword
 from datetime import date
+from flask_cors import cross_origin
 
 password_manager = Blueprint('password_manager', __name__)
 
@@ -16,10 +17,11 @@ def newPassword():
     PASSWORD_TABLE = getPasswordTable(MetaData())
     response = request.get_json()
     stmt = insert(PASSWORD_TABLE).values(
-        ACCOUNT_NAME = response['account_name'],
-        ACCOUNT_DESCRIPTION = response['account_description'],
-        USERNAME = response['username'],
-        PASSWORD = response['password'],
+        ACCOUNT_NAME = response['pwd-input-account-name'],
+        ACCOUNT_DESCRIPTION = response['pwd-input-account-description'],
+        USERNAME = response['pwd-input-user-name'],
+        PASSWORD = response['pwd-input-password'],
+        EMAIL = response['pwd-input-email-id'],
         CREATION_DATE = creation_date
     )
     engine = getDatabaseEngine();
@@ -51,6 +53,7 @@ def retrieveDetails(accountName):
 ## APIs to get all available accounts.
 ###
 @password_manager.route("/password-manager/user/accounts")
+@cross_origin(supports_credentials=True)
 def getAllAccounts():
     stmt = select(UserPassword.account_name)
     engine = getDatabaseEngine()
@@ -60,8 +63,6 @@ def getAllAccounts():
         try:
             for row in conn.execute(stmt):
                 accounts.append(row.account_name)
-            print(accounts)
-            print(type(accounts))
             response = {
                 "accounts": accounts
             }

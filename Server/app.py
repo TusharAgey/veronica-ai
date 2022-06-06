@@ -1,11 +1,20 @@
 from flask import Flask
+from flask import Flask, send_from_directory
+from werkzeug.utils import safe_join
+import os
 import database_resource
 import constants
 import logging
+from flask_cors import CORS
 from resources.password_manager import password_manager
 
 app = Flask(__name__)
 app.register_blueprint(password_manager)
+CORS(app, support_credentials=True)
+
+root = safe_join(os.path.dirname(__file__), 'dashboard-ui')
+jsFiles = safe_join(os.path.dirname(__file__), 'dashboard-ui/static/js')
+mediaFiles = safe_join(os.path.dirname(__file__), 'dashboard-ui/static/media')
 
 # Setup logging config
 logging.basicConfig(filename="userlog.log",
@@ -16,8 +25,20 @@ logger.setLevel(logging.INFO)
 
 # Default API
 @app.route("/")
-def hello_world():
-    return "<p>This is the brain behind veronica!</p>"
+def home():
+    return send_from_directory(root, 'index.html')
+
+@app.route('/<path:path>', methods=['GET'])
+def static_proxy(path):
+    return send_from_directory(root, path)
+
+@app.route('/static/js/<path:path>', methods=['GET'])
+def static_proxy_js(path):
+    return send_from_directory(jsFiles, path)
+
+@app.route('/static/media/<path:path>', methods=['GET'])
+def static_proxy_media(path):
+    return send_from_directory(mediaFiles, path)
 
 if __name__ == "__main__":
     DB_CREATION_STATUS = database_resource.createDatabase(logger);

@@ -1,6 +1,3 @@
-# Temporarily removing UI
-ui/pages
-ui
 # Editors
 .vscode/
 .idea/
@@ -19,6 +16,9 @@ Thumbs.db
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Local database
+*.db
 
 # C extensions
 *.so
@@ -127,3 +127,19 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+### react ###
+.DS_*
+*.log
+logs
+**/*.backup.*
+**/*.back.*
+
+node_modules
+bower_components
+
+*.sublime*
+
+psd
+thumb
+sketch

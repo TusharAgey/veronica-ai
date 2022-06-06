@@ -1,8 +1,0 @@
-#!/bin/bash
-# Start Server.
-
-
-# Serve UI.
-sudo npm install http-server -g
-cd dashboard-ui
-http-server

@@ -21,6 +21,7 @@ def getPasswordTable(metadata_obj):
         Column('ACCOUNT_DESCRIPTION', String(1024)),
         Column('USERNAME', String(64)),
         Column('PASSWORD', String(64)),
+        Column('EMAIL', String(64)),
         Column('CREATION_DATE', DateTime)
     );
     return USER_PASSWORDS_TABLE
