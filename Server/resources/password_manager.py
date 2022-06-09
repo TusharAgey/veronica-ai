@@ -68,5 +68,4 @@ def getAllAccounts():
             }
         except:
             response = {"error": "Failed to execute"}
-    print(response)
     return response

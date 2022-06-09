@@ -11,3 +11,11 @@ export const addAccount = (request) => {
 export const loadAccountDetails = (accountId) => {
   return axios.get("http://localhost:8080/password-manager/user/" + accountId);
 };
+
+// export const getAllOldAccounts = () => {
+//   return axios.get("http://localhost:5000/get_all_accounts");
+// };
+
+// export const getAccountDetails_old = (acc) => {
+//   return axios.get("http://localhost:5000/get_account_details?useracc=" + acc);
+// };

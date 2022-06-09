@@ -50,3 +50,30 @@ export const handleAddNewAccount = () => {
       (document.getElementById("pwd-input-" + elem.fieldIdentifier).value = "")
   );
 };
+
+const migratePwd = () => {
+  !currentAccounts.fetched &&
+    !currentAccounts.isFetching &&
+    getAllOldAccounts().then((res) => {
+      const accounts = res.data.elems.reduce((acc, e) => [...acc, ...e], []);
+      accounts.forEach((elem) =>
+        getAccountDetails_old(elem)
+          .then((data) => data.data)
+          .then((e) => {
+            const data = e.data;
+            const payloadToSend = {
+              "pwd-input-account-name": data[0],
+              "pwd-input-user-name": data[1],
+              "pwd-input-email-id": data[2],
+              "pwd-input-password": encryptPassword256Bit({
+                "pwd-input-session-password": "",
+                "pwd-input-password": data[3],
+              }),
+              "pwd-input-account-description": data[4],
+              "pwd-input-session-password": "none",
+            };
+            // addAccount(payloadToSend);
+          })
+      );
+    });
+};
