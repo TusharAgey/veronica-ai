@@ -34,6 +34,7 @@
     "react-swipeable-views": "0.14.0",
     "react-table": "7.7.0",
     "react-tagsinput": "3.19.0",
+    "crypto-js": "^4.2.0",
     "simple-crypto-js": "^3.0.1",
     "stylis": "^4.0.10"
   },
