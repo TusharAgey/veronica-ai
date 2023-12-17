@@ -1,7 +1,7 @@
 # veronica-ai
 Veronica - The Personal Assistant!
 
-The wait is over! do need a fully customizable and feature packed virtual assistant? This is the right place! Goal is to identify and solve common problems with asthetically pleasing UX and state of the art technologies powering the assistant.
+The wait is over! do you need a fully customizable and feature packed virtual assistant? This is the right place! Goal is to identify and solve common problems with asthetically pleasing UX and state of the art technologies powering the assistant.
 
 # Contribution guidelines
 
