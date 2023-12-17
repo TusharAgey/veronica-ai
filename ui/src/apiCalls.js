@@ -1,4 +1,4 @@
-const axios = require("axios");
+import axios from 'axios';
 
 export const getAccounts = () => {
   return axios.get("http://localhost:8080/password-manager/user/accounts");
