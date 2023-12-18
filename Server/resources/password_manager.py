@@ -1,5 +1,6 @@
 from flask import Blueprint
 from flask import request
+from flask import escape
 from sqlalchemy import insert, select, MetaData
 from database_resource import getDatabaseEngine, getPasswordTable
 from domain.UserPassword import UserPassword
@@ -46,7 +47,7 @@ def retrieveDetails(accountName):
         try:
             response = dict(conn.execute(stmt).one())
         except:
-            response = {"error": "No data found for the account: "+accountName}
+            response = {"error": "No data found for the account: "+ escape(accountName)}
     return dict(response)
 
 ###

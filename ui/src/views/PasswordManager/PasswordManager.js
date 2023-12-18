@@ -233,8 +233,8 @@ const PasswordManager = () => {
           <CardBody>
             <Flex direction="column" w="100%">
               <Select id="accountSelect" placeholder="Select account">
-                {currentAccounts.accounts.map((e) => (
-                  <option value={e}>{e}</option>
+                {currentAccounts.accounts.map((e, idx) => (
+                  <option key={idx} value={e}>{e}</option>
                 ))}
               </Select>
             </Flex>
