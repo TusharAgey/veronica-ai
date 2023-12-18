@@ -1,3 +1,4 @@
 flask == 2.2.5
 waitress == 2.1.2
 SQLAlchemy == 1.4.32
+flask_cors == 4.0.0

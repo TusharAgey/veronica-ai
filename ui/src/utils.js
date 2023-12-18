@@ -1,6 +1,5 @@
 import { pwdManagerFields } from "./variables/const";
 import { addAccount } from "./apiCalls";
-
 import { SimpleCrypto } from "simple-crypto-js";
 
 export const getGreetingByTime = () => {
@@ -22,7 +21,7 @@ export const decryptPassword256Bit = (password, key) => {
   try {
     return new SimpleCrypto(key).decrypt(password);
   } catch {
-    console.log("wrror");
+    console.log("error");
     return "ERROR";
   }
 };
@@ -76,4 +75,36 @@ const migratePwd = () => {
           })
       );
     });
+};
+
+const getAccInfo = () => {
+  return passwords.map(e => {
+    return [
+        e.filter(x => x[0] === 'account_name')[0][1],
+        e.filter(x => x[0] === 'username')[0][1],
+        e.filter(x => x[0] === 'email')[0][1],
+        e.filter(x => x[0] === 'password')[0][1],
+        e.filter(x => x[0] === 'account_description')[0][1]
+    ]
+  });
+};
+
+export const migratePwdFromFile = () => {
+  const accountInformation = getAccInfo();
+  accountInformation.forEach(accInfo => {
+    const data = accInfo;
+    const payloadToSend = {
+      "pwd-input-account-name": data[0],
+      "pwd-input-user-name": data[1],
+      "pwd-input-email-id": data[2],
+      "pwd-input-password": encryptPassword256Bit({
+        "pwd-input-session-password": "",
+        "pwd-input-password": data[3],
+      }),
+      "pwd-input-account-description": data[4],
+      "pwd-input-session-password": "none",
+    };
+    console.log({payloadToSend})
+    addAccount(payloadToSend);
+  });
 };
