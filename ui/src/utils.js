@@ -1,6 +1,50 @@
-import { pwdManagerFields } from "./variables/const";
-import { addAccount } from "./apiCalls";
 import { SimpleCrypto } from "simple-crypto-js";
+import { pwdManagerFields } from "./variables/const";
+import { addAccount, laodRandomFile } from "./apiCalls";
+
+export const getRandomFile = () => {
+  return laodRandomFile();
+};
+
+export const handleTextAreaKeyPress = (e, setInputText, inputText) => {
+  if (e.key === "Backspace") {
+    setInputText(inputText.slice(0, -1));
+  } else if (e.key === "Enter") {
+    setInputText(inputText + "\n");
+  } else if (
+    e.key !== "Shift" &&
+    e.key !== "Control" &&
+    e.key !== "Alt" &&
+    e.key !== "CapsLock" &&
+    e.key !== "Meta" &&
+    e.key !== "Delete" &&
+    !e.key.includes("Arrow")
+  ) {
+    setInputText(inputText + e.key);
+  }
+  e.preventDefault();
+};
+
+export const handleAddNewDiaryEntry = (inputText, setDownloadLinkVisible) => {
+  const key = document.getElementById("pwd-input-session-password").value;
+  const encryptionRequestBody = {
+    "pwd-input-session-password": key,
+    "pwd-input-password": inputText,
+  };
+  const encryptedData = encryptPassword256Bit(encryptionRequestBody);
+
+  const textFileAsBlob = new Blob([encryptedData], { type: "text/plain" });
+
+  const downloadLink = document.getElementById("save-file-href");
+  downloadLink.download = new Date().toDateString() + ".txt"; //filename.extension
+  downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+  setDownloadLinkVisible(true);
+};
+
+export const handleBrowseDiary = () => {
+  document.getElementById("file1").click();
+  return true;
+};
 
 export const getGreetingByTime = () => {
   const date = new Date();
@@ -78,20 +122,20 @@ const migratePwd = () => {
 };
 
 const getAccInfo = () => {
-  return passwords.map(e => {
+  return passwords.map((e) => {
     return [
-        e.filter(x => x[0] === 'account_name')[0][1],
-        e.filter(x => x[0] === 'username')[0][1],
-        e.filter(x => x[0] === 'email')[0][1],
-        e.filter(x => x[0] === 'password')[0][1],
-        e.filter(x => x[0] === 'account_description')[0][1]
-    ]
+      e.filter((x) => x[0] === "account_name")[0][1],
+      e.filter((x) => x[0] === "username")[0][1],
+      e.filter((x) => x[0] === "email")[0][1],
+      e.filter((x) => x[0] === "password")[0][1],
+      e.filter((x) => x[0] === "account_description")[0][1],
+    ];
   });
 };
 
 export const migratePwdFromFile = () => {
   const accountInformation = getAccInfo();
-  accountInformation.forEach(accInfo => {
+  accountInformation.forEach((accInfo) => {
     const data = accInfo;
     const payloadToSend = {
       "pwd-input-account-name": data[0],
@@ -104,7 +148,14 @@ export const migratePwdFromFile = () => {
       "pwd-input-account-description": data[4],
       "pwd-input-session-password": "none",
     };
-    console.log({payloadToSend})
     addAccount(payloadToSend);
+  });
+};
+
+export const readText = (event, setInputText) => {
+  const key = document.getElementById("pwd-input-session-password").value;
+  const file = event.target.files.item(0);
+  file.text().then((response) => {
+    setInputText(decryptPassword256Bit(response, key));
   });
 };

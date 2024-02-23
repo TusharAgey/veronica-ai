@@ -38,7 +38,7 @@ export default function Footer(props) {
         </Link>
         &
         <Link color="blue.400" href="https://www.simmmple.com" target="_blank">
-          {" Simmmple"}
+          {" Simmmple "}
         </Link>
         for a better web
       </Text>

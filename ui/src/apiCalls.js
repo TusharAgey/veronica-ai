@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 export const getAccounts = () => {
   return axios.get("http://localhost:8080/password-manager/user/accounts");
@@ -10,6 +10,13 @@ export const addAccount = (request) => {
 
 export const loadAccountDetails = (accountId) => {
   return axios.get("http://localhost:8080/password-manager/user/" + accountId);
+};
+
+export const laodRandomFile = () => {
+  const files = ["treeTraversal.java"];
+  const randomFile = files[Math.floor(Math.random() * files.length)];
+
+  return axios.get("http://localhost:8080/" + randomFile);
 };
 
 // export const getAllOldAccounts = () => {

@@ -12,9 +12,8 @@ app = Flask(__name__)
 app.register_blueprint(password_manager)
 CORS(app, support_credentials=True)
 
-root = safe_join(os.path.dirname(__file__), 'dashboard-ui')
-jsFiles = safe_join(os.path.dirname(__file__), 'dashboard-ui/static/js')
-mediaFiles = safe_join(os.path.dirname(__file__), 'dashboard-ui/static/media')
+root = safe_join(os.path.dirname(__file__), 'code')
+javaFiles = safe_join(os.path.dirname(__file__), 'code')
 
 # Setup logging config
 logging.basicConfig(filename="userlog.log",
@@ -32,13 +31,9 @@ def home():
 def static_proxy(path):
     return send_from_directory(root, path)
 
-@app.route('/static/js/<path:path>', methods=['GET'])
-def static_proxy_js(path):
-    return send_from_directory(jsFiles, path)
-
-@app.route('/static/media/<path:path>', methods=['GET'])
+@app.route('/<path:path>', methods=['GET'])
 def static_proxy_media(path):
-    return send_from_directory(mediaFiles, path)
+    return send_from_directory(javaFiles, path)
 
 if __name__ == "__main__":
     DB_CREATION_STATUS = database_resource.createDatabase(logger);
