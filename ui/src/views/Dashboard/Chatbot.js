@@ -1,7 +1,7 @@
 "use client";
 /*eslint-disable*/
 
-import MessageBoxChat from "../../components/Message/MessageBoxChat";
+import { MessageBoxChat } from "../../components/Message/MessageBoxChat";
 import {
   Button,
   Flex,
@@ -98,7 +98,6 @@ export const Chat = (props) => {
     { color: "gray.500" },
     { color: "whiteAlpha.600" }
   );
-  console.log(messages);
   const handleUserQuery = () => {
     setLoading(true);
     const userInput = document.getElementById("user-text-input").value;
