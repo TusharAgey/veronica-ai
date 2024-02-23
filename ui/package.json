@@ -34,9 +34,14 @@
     "react-swipeable-views": "0.14.0",
     "react-table": "7.7.0",
     "react-tagsinput": "3.19.0",
+    "lucide-react": "^0.132.0",
     "crypto-js": "^4.2.0",
     "simple-crypto-js": "^3.0.1",
-    "stylis": "^4.0.10"
+    "stylis": "^4.0.10",
+    "react-markdown": "^8.0.6",
+    "react-syntax-highlighter": "^15.5.0",
+    "rehype-raw": "^6.1.1",
+    "remark-gfm": "^3.0.1"
   },
   "resolutions": {
     "react-error-overlay": "6.0.9"

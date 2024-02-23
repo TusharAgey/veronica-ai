@@ -1,6 +1,7 @@
 import React from "react";
 
 import Dashboard from "./views/Dashboard/Dashboard";
+import { Chat } from "./views/Dashboard/Chatbot";
 import PasswordManager from "./views/PasswordManager/PasswordManager";
 import DiaryManager from "./views/Diary/DiaryManager";
 import { Icon } from "@chakra-ui/icons";
@@ -29,6 +30,13 @@ const dashRoutes = [
     name: "Journal",
     icon: <Icon as={MdBookOnline} color="inherit" />,
     component: DiaryManager,
+    layout: "/admin",
+  },
+  {
+    path: "/chatbot",
+    name: "Chatbot",
+    icon: <Icon as={MdBookOnline} color="inherit" />,
+    component: Chat,
     layout: "/admin",
   },
 ];
