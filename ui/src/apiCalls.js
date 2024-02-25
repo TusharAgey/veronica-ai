@@ -19,6 +19,20 @@ export const laodRandomFile = () => {
   return axios.get("http://localhost:8080/" + randomFile);
 };
 
+export const getChatCompletionResponse = (allMessages, userQuery) => {
+  return Promise.resolve([
+    ...allMessages,
+    {
+      from: "ai",
+      content: "hi there!",
+    },
+  ]);
+  // return axios.post("http://localhost:5000/chat/llama/completion", {
+  //   allMessages,
+  //   userQuery,
+  // });
+};
+
 // export const getAllOldAccounts = () => {
 //   return axios.get("http://localhost:5000/get_all_accounts");
 // };

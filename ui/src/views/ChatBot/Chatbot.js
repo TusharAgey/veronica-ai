@@ -10,13 +10,17 @@ import {
   Input,
   useColorModeValue,
   Spacer,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from "@chakra-ui/react";
 import { SendIcon } from "lucide-react";
 
 import { useState } from "react";
 import { MdAutoAwesome, MdBolt, MdEdit, MdPerson } from "react-icons/md";
 import Bg from "../../assets/img/bg-image.png";
-import { getChatBotResponseAndSetMessage } from "../../chatBotUtils";
+import { getChatBotResponseAndSetMessage } from "./chatBotUtils";
 
 export const Chat = (props) => {
   const [model, setModel] = useState("gpt-3.5-turbo");
@@ -43,9 +47,13 @@ export const Chat = (props) => {
     { color: "whiteAlpha.600" }
   );
   const handleUserQuery = () => {
-    setLoading(true);
     const userInput = document.getElementById("user-text-input").value;
 
+    if (userInput.length == 0) {
+      return;
+    }
+
+    setLoading(true);
     const updatedMessages = [
       ...messages,
       {
