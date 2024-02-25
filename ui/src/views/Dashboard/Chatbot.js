@@ -16,70 +16,14 @@ import { SendIcon } from "lucide-react";
 import { useState } from "react";
 import { MdAutoAwesome, MdBolt, MdEdit, MdPerson } from "react-icons/md";
 import Bg from "../../assets/img/bg-image.png";
+import { getChatBotResponseAndSetMessage } from "../../chatBotUtils";
 
 export const Chat = (props) => {
   const [model, setModel] = useState("gpt-3.5-turbo");
   // Loading state
   const [loading, setLoading] = useState(false);
   // Conversation state
-  const [messages, setMessages] = useState([
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-    {
-      from: "ai",
-      content: "How can I help you?",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
 
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
   const inputColor = useColorModeValue("navy.700", "white");
@@ -102,13 +46,20 @@ export const Chat = (props) => {
     setLoading(true);
     const userInput = document.getElementById("user-text-input").value;
 
-    setMessages([
+    const updatedMessages = [
       ...messages,
       {
         from: "user",
         content: userInput,
       },
-    ]);
+    ];
+    setMessages(updatedMessages);
+    getChatBotResponseAndSetMessage(
+      userInput,
+      updatedMessages,
+      setMessages,
+      setLoading
+    );
   };
 
   return (
@@ -210,7 +161,7 @@ export const Chat = (props) => {
             </Flex>
           </Flex>
         </Flex>
-        <MessageBoxChat messages={messages} />
+        <MessageBoxChat messages={messages} isLoading={loading} />
         <Spacer />
         {/* Chat Input */}
         <Flex
@@ -227,6 +178,7 @@ export const Chat = (props) => {
             borderColor={borderColor}
             borderRadius="45px"
             p="15px 20px"
+            autoComplete="off"
             me="10px"
             fontSize="sm"
             fontWeight="500"

@@ -36,54 +36,28 @@ export default function Footer(props) {
         >
           {"Creative Tim "}
         </Link>
-        &
+        ,
         <Link color="blue.400" href="https://www.simmmple.com" target="_blank">
           {" Simmmple "}
+        </Link>{" "}
+        ,
+        <Link
+          color="blue.400"
+          href="https://github.com/horizon-ui/chatgpt-ai-template/tree/main"
+          target="_blank"
+        >
+          {" chatgpt-ai-template "}
+        </Link>
+        &
+        <Link
+          color="blue.400"
+          href="https://github.com/NagariaHussain/doppio_bot/tree/main"
+          target="_blank"
+        >
+          {" doppio_bot "}
         </Link>
         for a better web
       </Text>
-      {/* <List display='flex'>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link color='gray.400' href='https://www.creative-tim.com'>
-            {document.documentElement.dir === "rtl"
-              ? "توقيت الإبداعية"
-              : "Creative Tim"}
-          </Link>
-        </ListItem>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link color='gray.400' href='https://www.simmmple.com'>
-            {document.documentElement.dir === "rtl" ? "سيممبل" : "Simmmple"}
-          </Link>
-        </ListItem>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link
-            color='gray.400'
-            href='#blog'
-            href='https://creative-tim.com/blog'>
-            {document.documentElement.dir === "rtl" ? "مدونة" : "Blog"}
-          </Link>
-        </ListItem>
-        <ListItem>
-          <Link
-            color='gray.400'
-            href='#license'
-            href='https://www.creative-tim.com/license'>
-            {document.documentElement.dir === "rtl" ? "رخصة" : "License"}
-          </Link>
-        </ListItem>
-      </List> */}
     </Flex>
   );
 }

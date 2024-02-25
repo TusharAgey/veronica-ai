@@ -6,7 +6,8 @@ import Card from "../Card/Card";
 
 export const MessageBoxChat = (props) => {
   const messagesEndRef = useRef(null);
-  const { messages } = props;
+  const { messages, isLoading } = props;
+  const loadingMessageContent = { isLoading, from: "ai", content: undefined };
 
   useEffect(() => {
     messagesEndRef.current.scrollIntoView();
@@ -24,14 +25,16 @@ export const MessageBoxChat = (props) => {
           },
         }}
       >
-        {[...messages, "refForLatestScrollFocus"].map((message, idx) => (
-          <Message
-            id={idx}
-            message={message}
-            idx={idx}
-            messageRef={messagesEndRef}
-          ></Message>
-        ))}
+        {[...messages, loadingMessageContent, "refForLatestScrollFocus"].map(
+          (message, idx) => (
+            <Message
+              id={idx}
+              message={message}
+              idx={idx}
+              messageRef={messagesEndRef}
+            ></Message>
+          )
+        )}
       </Card>
     </Flex>
   );

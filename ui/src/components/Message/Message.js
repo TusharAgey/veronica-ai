@@ -9,6 +9,10 @@ const Message = ({ message, idx, messageRef }) => {
   if (message === "refForLatestScrollFocus") {
     return <div ref={messageRef}></div>;
   }
+  // This is to not display dummy message. Only displayed if waiting for a response and shows nice bubble.
+  if (!message.isLoading && message.content === undefined) {
+    return <></>;
+  }
   return (
     <MessageBubble key={idx} fromAI={fromAI}>
       {!message.isLoading ? (
