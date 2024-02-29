@@ -25,7 +25,13 @@ const paramDefaults = {
 
 let generation_settings = null;
 
-export async function* llama(prompt, params = {}, config = {}) {
+export async function* llama(
+  prompt,
+  model,
+  backstory,
+  params = {},
+  config = {}
+) {
   let controller = config.controller;
 
   if (!controller) {
@@ -33,17 +39,14 @@ export async function* llama(prompt, params = {}, config = {}) {
   }
 
   const finalPrompt =
-    "This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.\n\n" +
-    +"User: how are you so good?\n" +
-    "Llama: I have always been interested in learning new things and constantly improving myself. Additionally, I have had the privilege of being surrounded by great mentors who have guided me along my journey.\n" +
-    "User: nice\n" +
-    "Llama: Thank you!\n" +
-    "User: " +
-    prompt +
-    "\nLlama:";
+    backstory + "\n\n" + "User: " + prompt + "\n" + model + ":";
 
-  const completionParams = { ...paramDefaults, ...params, prompt: finalPrompt };
-  console.log("whatever");
+  const completionParams = {
+    ...paramDefaults,
+    ...params,
+    prompt: finalPrompt,
+    stop: [...paramDefaults["stop"], model + ":", "Tushar:"],
+  };
   const response = await fetch("http://127.0.0.1:6792/completion", {
     method: "POST",
     body: JSON.stringify(completionParams),

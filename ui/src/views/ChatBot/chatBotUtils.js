@@ -13,21 +13,31 @@ export const getChatBotResponseAndSetMessage = async (
   query,
   allMessages,
   setMessages,
-  setLoading
+  setLoading,
+  model,
+  botsBackStory
 ) => {
   let data = "";
-  const request = llama(getPrompt(query, allMessages));
+  const request = llama(
+    getPrompt(query, allMessages),
+    model,
+    botsBackStory[model]
+  );
 
   for await (const chunk of request) {
     data += chunk.data.content;
   }
-  setMessages([
+
+  setMessages({
     ...allMessages,
-    {
-      from: "ai",
-      content: data,
-    },
-  ]);
+    [model]: [
+      ...allMessages[model],
+      {
+        from: "ai",
+        content: data,
+      },
+    ],
+  });
   setLoading(false);
   clearUserInputBox();
 };

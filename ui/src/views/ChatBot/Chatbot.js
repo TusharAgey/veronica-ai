@@ -14,16 +14,31 @@ import {
 import { SendIcon } from "lucide-react";
 
 import { useState } from "react";
-import { MdAutoAwesome, MdBolt, MdEdit, MdPerson } from "react-icons/md";
+import { MdAutoAwesome, MdBolt } from "react-icons/md";
 import Bg from "../../assets/img/bg-image.png";
 import { getChatBotResponseAndSetMessage } from "./chatBotUtils";
 
-export const Chat = (props) => {
-  const [model, setModel] = useState("gpt-3.5-turbo");
+const botsBackStory = {
+  "code-bot":
+    "This is a conversation between Tushar and Code-Bot, a friendly chatbot." +
+    "Code-Bot is helpful, kind, honest, good at writing software programs," +
+    "and never fails to answer any requests immediately and with precision. Master of Javascript!",
+
+  "space-pirate":
+    "This is a conversation between Tushar and Spyro, a Space Pirate." +
+    "Spyro is devious, great at finding secrets of the space, good at planatery exploration." +
+    "Has knowledge of all the constellations and is specially fond of the Orion!",
+};
+
+export const Chat = () => {
+  const [model, setModel] = useState("code-bot");
   // Loading state
   const [loading, setLoading] = useState(false);
   // Conversation state
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState({
+    "code-bot": [],
+    "space-pirate": [],
+  });
 
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
   const inputColor = useColorModeValue("navy.700", "white");
@@ -50,19 +65,24 @@ export const Chat = (props) => {
     }
 
     setLoading(true);
-    const updatedMessages = [
+    const updatedMessages = {
       ...messages,
-      {
-        from: "user",
-        content: userInput,
-      },
-    ];
+      [model]: [
+        ...messages[model],
+        {
+          from: "user",
+          content: userInput,
+        },
+      ],
+    };
     setMessages(updatedMessages);
     getChatBotResponseAndSetMessage(
       userInput,
       updatedMessages,
       setMessages,
-      setLoading
+      setLoading,
+      model,
+      botsBackStory
     );
   };
 
@@ -102,15 +122,15 @@ export const Chat = (props) => {
               transition="0.3s"
               justify={"center"}
               align="center"
-              bg={model === "gpt-3.5-turbo" ? buttonBg : "transparent"}
+              bg={model === "code-bot" ? buttonBg : "transparent"}
               w="174px"
               h="70px"
-              boxShadow={model === "gpt-3.5-turbo" ? buttonShadow : "none"}
+              boxShadow={model === "code-bot" ? buttonShadow : "none"}
               borderRadius="14px"
               color={textColor}
               fontSize="18px"
               fontWeight={"700"}
-              onClick={() => setModel("gpt-3.5-turbo")}
+              onClick={() => setModel("code-bot")}
             >
               <Flex
                 borderRadius="full"
@@ -135,15 +155,15 @@ export const Chat = (props) => {
               transition="0.3s"
               justify={"center"}
               align="center"
-              bg={model === "gpt-4" ? buttonBg : "transparent"}
+              bg={model === "space-pirate" ? buttonBg : "transparent"}
               w="164px"
               h="70px"
-              boxShadow={model === "gpt-4" ? buttonShadow : "none"}
+              boxShadow={model === "space-pirate" ? buttonShadow : "none"}
               borderRadius="14px"
               color={textColor}
               fontSize="18px"
               fontWeight={"700"}
-              onClick={() => setModel("gpt-4")}
+              onClick={() => setModel("space-pirate")}
             >
               <Flex
                 borderRadius="full"
@@ -161,11 +181,11 @@ export const Chat = (props) => {
                   color={iconColor}
                 />
               </Flex>
-              Chat Bot
+              Space Pirate
             </Flex>
           </Flex>
         </Flex>
-        <MessageBoxChat messages={messages} isLoading={loading} />
+        <MessageBoxChat messages={messages[model]} isLoading={loading} />
         <Spacer />
         {/* Chat Input */}
         <Flex
