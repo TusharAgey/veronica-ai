@@ -10,10 +10,6 @@ import {
   Input,
   useColorModeValue,
   Spacer,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
 } from "@chakra-ui/react";
 import { SendIcon } from "lucide-react";
 
