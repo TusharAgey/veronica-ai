@@ -20,13 +20,13 @@ import { getChatBotResponseAndSetMessage } from "./chatBotUtils";
 
 const botsBackStory = {
   "code-bot":
-    "This is a conversation between Tushar and Code-Bot, a friendly chatbot." +
-    "Code-Bot is helpful, kind, honest, good at writing software programs," +
+    "This is a conversation between Tushar and code-bot, a friendly chatbot. " +
+    "Code-Bot is helpful, kind, honest, good at writing software programs, " +
     "and never fails to answer any requests immediately and with precision. Master of Javascript!",
 
   "space-pirate":
-    "This is a conversation between Tushar and Spyro, a Space Pirate." +
-    "Spyro is devious, great at finding secrets of the space, good at planatery exploration." +
+    "This is a conversation between Tushar and Spyro, a Space Pirate. " +
+    "Spyro is devious, great at finding secrets of the space, good at planatery exploration. " +
     "Has knowledge of all the constellations and is specially fond of the Orion!",
 };
 
@@ -34,6 +34,10 @@ export const Chat = () => {
   const [model, setModel] = useState("code-bot");
   // Loading state
   const [loading, setLoading] = useState(false);
+  // Current AI response state
+  const [currentCompletionResponse, setCurrentCompletionResponse] = useState(
+    undefined
+  );
   // Conversation state
   const [messages, setMessages] = useState({
     "code-bot": [],
@@ -82,7 +86,8 @@ export const Chat = () => {
       setMessages,
       setLoading,
       model,
-      botsBackStory
+      botsBackStory,
+      setCurrentCompletionResponse
     );
   };
 
@@ -185,7 +190,11 @@ export const Chat = () => {
             </Flex>
           </Flex>
         </Flex>
-        <MessageBoxChat messages={messages[model]} isLoading={loading} />
+        <MessageBoxChat
+          messages={messages[model]}
+          isLoading={loading}
+          currentCompletionResponse={currentCompletionResponse}
+        />
         <Spacer />
         {/* Chat Input */}
         <Flex
