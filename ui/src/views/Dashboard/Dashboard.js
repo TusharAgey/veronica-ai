@@ -4,398 +4,301 @@ import {
   Button,
   Flex,
   Grid,
-  Progress,
-  SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
-  Table,
-  Tbody,
-  Td,
+  Icon,
   Text,
-  Th,
-  Thead,
-  Tr,
   useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
+// Assets
+import BackgroundCard1 from "assets/img/BackgroundCard1.png";
 // Custom components
 import Card from "components/Card/Card.js";
-import BarChart from "components/Charts/BarChart";
-import LineChart from "components/Charts/LineChart";
+import CardBody from "components/Card/CardBody.js";
+import CardHeader from "components/Card/CardHeader.js";
 import IconBox from "components/Icons/IconBox";
-// Custom icons
-import {
-  CartIcon,
-  DocumentIcon,
-  GlobeIcon,
-  WalletIcon,
-} from "components/Icons/Icons.js";
+import { HSeparator } from "components/Separator/Separator";
+import InvoicesRow from "components/Tables/InvoicesRow";
 import React from "react";
-// Variables
-import {
-  barChartData,
-  barChartOptions,
-  lineChartData,
-  lineChartOptions,
-} from "variables/charts";
-import { pageVisits, socialTraffic } from "variables/general";
+import { FaCalculator, FaClock } from "react-icons/fa";
+import { RiRobot2Fill } from "react-icons/ri";
+import { invoicesData } from "variables/general";
 
-export default function Dashboard() {
-  // Chakra Color Mode
+function Dashboard() {
+  // Chakra color mode
   const iconBlue = useColorModeValue("blue.500", "blue.500");
-  const iconBoxInside = useColorModeValue("white", "white");
   const textColor = useColorModeValue("gray.700", "white");
-  const tableRowColor = useColorModeValue("#F7FAFC", "navy.900");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const textTableColor = useColorModeValue("gray.500", "white");
-
+  const borderColor = useColorModeValue("#dee2e6", "transparent");
   const { colorMode } = useColorMode();
 
   return (
-    <div style={{ marginTop: "25%", marginLeft: "50%" }}>Coming soon!</div>
-
-    // <Flex flexDirection='column' pt={{ base: "120px", md: "75px" }}>
-    //   <SimpleGrid columns={{ sm: 1, md: 2, xl: 4 }} spacing='24px' mb='20px'>
-    //     <Card minH='125px'>
-    //       <Flex direction='column'>
-    //         <Flex
-    //           flexDirection='row'
-    //           align='center'
-    //           justify='center'
-    //           w='100%'
-    //           mb='25px'>
-    //           <Stat me='auto'>
-    //             <StatLabel
-    //               fontSize='xs'
-    //               color='gray.400'
-    //               fontWeight='bold'
-    //               textTransform='uppercase'>
-    //               Today's Money
-    //             </StatLabel>
-    //             <Flex>
-    //               <StatNumber fontSize='lg' color={textColor} fontWeight='bold'>
-    //                 $53,897
-    //               </StatNumber>
-    //             </Flex>
-    //           </Stat>
-    //           <IconBox
-    //             borderRadius='50%'
-    //             as='box'
-    //             h={"45px"}
-    //             w={"45px"}
-    //             bg={iconBlue}>
-    //             <WalletIcon h={"24px"} w={"24px"} color={iconBoxInside} />
-    //           </IconBox>
-    //         </Flex>
-    //         <Text color='gray.400' fontSize='sm'>
-    //           <Text as='span' color='green.400' fontWeight='bold'>
-    //             +3.48%{" "}
-    //           </Text>
-    //           Since last month
-    //         </Text>
-    //       </Flex>
-    //     </Card>
-    //     <Card minH='125px'>
-    //       <Flex direction='column'>
-    //         <Flex
-    //           flexDirection='row'
-    //           align='center'
-    //           justify='center'
-    //           w='100%'
-    //           mb='25px'>
-    //           <Stat me='auto'>
-    //             <StatLabel
-    //               fontSize='xs'
-    //               color='gray.400'
-    //               fontWeight='bold'
-    //               textTransform='uppercase'>
-    //               Today's Users
-    //             </StatLabel>
-    //             <Flex>
-    //               <StatNumber fontSize='lg' color={textColor} fontWeight='bold'>
-    //                 $3,200
-    //               </StatNumber>
-    //             </Flex>
-    //           </Stat>
-    //           <IconBox
-    //             borderRadius='50%'
-    //             as='box'
-    //             h={"45px"}
-    //             w={"45px"}
-    //             bg={iconBlue}>
-    //             <GlobeIcon h={"24px"} w={"24px"} color={iconBoxInside} />
-    //           </IconBox>
-    //         </Flex>
-    //         <Text color='gray.400' fontSize='sm'>
-    //           <Text as='span' color='green.400' fontWeight='bold'>
-    //             +5.2%{" "}
-    //           </Text>
-    //           Since last month
-    //         </Text>
-    //       </Flex>
-    //     </Card>
-    //     <Card minH='125px'>
-    //       <Flex direction='column'>
-    //         <Flex
-    //           flexDirection='row'
-    //           align='center'
-    //           justify='center'
-    //           w='100%'
-    //           mb='25px'>
-    //           <Stat me='auto'>
-    //             <StatLabel
-    //               fontSize='xs'
-    //               color='gray.400'
-    //               fontWeight='bold'
-    //               textTransform='uppercase'>
-    //               New Clients
-    //             </StatLabel>
-    //             <Flex>
-    //               <StatNumber fontSize='lg' color={textColor} fontWeight='bold'>
-    //                 +2,503
-    //               </StatNumber>
-    //             </Flex>
-    //           </Stat>
-    //           <IconBox
-    //             borderRadius='50%'
-    //             as='box'
-    //             h={"45px"}
-    //             w={"45px"}
-    //             bg={iconBlue}>
-    //             <DocumentIcon h={"24px"} w={"24px"} color={iconBoxInside} />
-    //           </IconBox>
-    //         </Flex>
-    //         <Text color='gray.400' fontSize='sm'>
-    //           <Text as='span' color='red.500' fontWeight='bold'>
-    //             -2.82%{" "}
-    //           </Text>
-    //           Since last month
-    //         </Text>
-    //       </Flex>
-    //     </Card>
-    //     <Card minH='125px'>
-    //       <Flex direction='column'>
-    //         <Flex
-    //           flexDirection='row'
-    //           align='center'
-    //           justify='center'
-    //           w='100%'
-    //           mb='25px'>
-    //           <Stat me='auto'>
-    //             <StatLabel
-    //               fontSize='xs'
-    //               color='gray.400'
-    //               fontWeight='bold'
-    //               textTransform='uppercase'>
-    //               Total Sales
-    //             </StatLabel>
-    //             <Flex>
-    //               <StatNumber fontSize='lg' color={textColor} fontWeight='bold'>
-    //                 $173,000
-    //               </StatNumber>
-    //             </Flex>
-    //           </Stat>
-    //           <IconBox
-    //             borderRadius='50%'
-    //             as='box'
-    //             h={"45px"}
-    //             w={"45px"}
-    //             bg={iconBlue}>
-    //             <CartIcon h={"24px"} w={"24px"} color={iconBoxInside} />
-    //           </IconBox>
-    //         </Flex>
-    //         <Text color='gray.400' fontSize='sm'>
-    //           <Text as='span' color='green.400' fontWeight='bold'>
-    //             +8.12%{" "}
-    //           </Text>
-    //           Since last month
-    //         </Text>
-    //       </Flex>
-    //     </Card>
-    //   </SimpleGrid>
-    //   <Grid
-    //     templateColumns={{ sm: "1fr", lg: "2fr 1fr" }}
-    //     templateRows={{ lg: "repeat(2, auto)" }}
-    //     gap='20px'>
-    //     <Card
-    //       bg={
-    //         colorMode === "dark"
-    //           ? "navy.800"
-    //           : "linear-gradient(81.62deg, #313860 2.25%, #151928 79.87%)"
-    //       }
-    //       p='0px'
-    //       maxW={{ sm: "320px", md: "100%" }}>
-    //       <Flex direction='column' mb='40px' p='28px 0px 0px 22px'>
-    //         <Text color='#fff' fontSize='lg' fontWeight='bold' mb='6px'>
-    //           Sales Overview
-    //         </Text>
-    //         <Text color='#fff' fontSize='sm'>
-    //           <Text as='span' color='green.400' fontWeight='bold'>
-    //             (+5) more{" "}
-    //           </Text>
-    //           in 2022
-    //         </Text>
-    //       </Flex>
-    //       <Box minH='300px'>
-    //         <LineChart
-    //           chartData={lineChartData}
-    //           chartOptions={lineChartOptions}
-    //         />
-    //       </Box>
-    //     </Card>
-    //     <Card p='0px' maxW={{ sm: "320px", md: "100%" }}>
-    //       <Flex direction='column' mb='40px' p='28px 0px 0px 22px'>
-    //         <Text color='gray.400' fontSize='sm' fontWeight='bold' mb='6px'>
-    //           PERFORMANCE
-    //         </Text>
-    //         <Text color={textColor} fontSize='lg' fontWeight='bold'>
-    //           Total orders
-    //         </Text>
-    //       </Flex>
-    //       <Box minH='300px'>
-    //         <BarChart chartData={barChartData} chartOptions={barChartOptions} />
-    //       </Box>
-    //     </Card>
-    //     <Card p='0px' maxW={{ sm: "320px", md: "100%" }}>
-    //       <Flex direction='column'>
-    //         <Flex align='center' justify='space-between' p='22px'>
-    //           <Text fontSize='lg' color={textColor} fontWeight='bold'>
-    //             Page visits
-    //           </Text>
-    //           <Button variant='primary' maxH='30px'>
-    //             SEE ALL
-    //           </Button>
-    //         </Flex>
-    //         <Box overflow={{ sm: "scroll", lg: "hidden" }}>
-    //           <Table>
-    //             <Thead>
-    //               <Tr bg={tableRowColor}>
-    //                 <Th color='gray.400' borderColor={borderColor}>
-    //                   Page name
-    //                 </Th>
-    //                 <Th color='gray.400' borderColor={borderColor}>
-    //                   Visitors
-    //                 </Th>
-    //                 <Th color='gray.400' borderColor={borderColor}>
-    //                   Unique users
-    //                 </Th>
-    //                 <Th color='gray.400' borderColor={borderColor}>
-    //                   Bounce rate
-    //                 </Th>
-    //               </Tr>
-    //             </Thead>
-    //             <Tbody>
-    //               {pageVisits.map((el, index, arr) => {
-    //                 return (
-    //                   <Tr key={index}>
-    //                     <Td
-    //                       color={textTableColor}
-    //                       fontSize='sm'
-    //                       fontWeight='bold'
-    //                       borderColor={borderColor}
-    //                       border={index === arr.length - 1 ? "none" : null}>
-    //                       {el.pageName}
-    //                     </Td>
-    //                     <Td
-    //                       color={textTableColor}
-    //                       fontSize='sm'
-    //                       border={index === arr.length - 1 ? "none" : null}
-    //                       borderColor={borderColor}>
-    //                       {el.visitors}
-    //                     </Td>
-    //                     <Td
-    //                       color={textTableColor}
-    //                       fontSize='sm'
-    //                       border={index === arr.length - 1 ? "none" : null}
-    //                       borderColor={borderColor}>
-    //                       {el.uniqueUsers}
-    //                     </Td>
-    //                     <Td
-    //                       color={textTableColor}
-    //                       fontSize='sm'
-    //                       border={index === arr.length - 1 ? "none" : null}
-    //                       borderColor={borderColor}>
-    //                       {el.bounceRate}
-    //                     </Td>
-    //                   </Tr>
-    //                 );
-    //               })}
-    //             </Tbody>
-    //           </Table>
-    //         </Box>
-    //       </Flex>
-    //     </Card>
-    //     <Card p='0px' maxW={{ sm: "320px", md: "100%" }}>
-    //       <Flex direction='column'>
-    //         <Flex align='center' justify='space-between' p='22px'>
-    //           <Text fontSize='lg' color={textColor} fontWeight='bold'>
-    //             Social traffic
-    //           </Text>
-    //           <Button variant='primary' maxH='30px'>
-    //             SEE ALL
-    //           </Button>
-    //         </Flex>
-    //       </Flex>
-    //       <Box overflow={{ sm: "scroll", lg: "hidden" }}>
-    //         <Table>
-    //           <Thead>
-    //             <Tr bg={tableRowColor}>
-    //               <Th color='gray.400' borderColor={borderColor}>
-    //                 Referral
-    //               </Th>
-    //               <Th color='gray.400' borderColor={borderColor}>
-    //                 Visitors
-    //               </Th>
-    //               <Th color='gray.400' borderColor={borderColor}></Th>
-    //             </Tr>
-    //           </Thead>
-    //           <Tbody>
-    //             {socialTraffic.map((el, index, arr) => {
-    //               return (
-    //                 <Tr key={index}>
-    //                   <Td
-    //                     color={textTableColor}
-    //                     fontSize='sm'
-    //                     fontWeight='bold'
-    //                     borderColor={borderColor}
-    //                     border={index === arr.length - 1 ? "none" : null}>
-    //                     {el.referral}
-    //                   </Td>
-    //                   <Td
-    //                     color={textTableColor}
-    //                     fontSize='sm'
-    //                     borderColor={borderColor}
-    //                     border={index === arr.length - 1 ? "none" : null}>
-    //                     {el.visitors}
-    //                   </Td>
-    //                   <Td
-    //                     color={textTableColor}
-    //                     fontSize='sm'
-    //                     borderColor={borderColor}
-    //                     border={index === arr.length - 1 ? "none" : null}>
-    //                     <Flex align='center'>
-    //                       <Text
-    //                         color={textTableColor}
-    //                         fontWeight='bold'
-    //                         fontSize='sm'
-    //                         me='12px'>{`${el.percentage}%`}</Text>
-    //                       <Progress
-    //                         size='xs'
-    //                         colorScheme={el.color}
-    //                         value={el.percentage}
-    //                         minW='120px'
-    //                       />
-    //                     </Flex>
-    //                   </Td>
-    //                 </Tr>
-    //               );
-    //             })}
-    //           </Tbody>
-    //         </Table>
-    //       </Box>
-    //     </Card>
-    //   </Grid>
-    // </Flex>
+    <Flex direction="column" pt={{ base: "120px", md: "75px" }}>
+      <Grid templateColumns={{ sm: "1fr", lg: "2fr 1.2fr" }} templateRows="1fr">
+        <Box>
+          <Grid
+            templateColumns={{
+              sm: "1fr",
+              md: "1fr 1fr",
+              xl: "1fr 1fr 1fr 1fr",
+            }}
+            templateRows={{ sm: "auto auto auto", md: "1fr auto", xl: "1fr" }}
+            gap="26px"
+          >
+            <Card
+              backgroundImage={
+                colorMode === "dark"
+                  ? "linear-gradient(180deg, #3182CE 0%, #63B3ED 100%)"
+                  : BackgroundCard1
+              }
+              backgroundRepeat="no-repeat"
+              background="cover"
+              bgPosition="10%"
+              p="16px"
+              h={{ sm: "220px", xl: "100%" }}
+              gridArea={{ md: "1 / 1 / 2 / 3", xl: "1 / 1 / 2 / 3" }}
+            >
+              <CardBody h="100%" w="100%">
+                <Flex
+                  direction="column"
+                  color="white"
+                  h="100%"
+                  p="0px 10px 20px 10px"
+                  w="100%"
+                >
+                  <Flex justify="space-between" align="left">
+                    <Text fontSize="md" fontWeight="bold">
+                      AI Bots
+                    </Text>
+                    <Icon
+                      as={RiRobot2Fill}
+                      w="48px"
+                      h="auto"
+                      color="gray.400"
+                    />
+                  </Flex>
+                  <Flex direction="column" justify="space-between">
+                    <Box style={{ marginLeft: "15px" }}>
+                      <ol>
+                        <li>
+                          <Text>Space Pirate</Text>
+                        </li>
+                        <li>
+                          <Text>Code Bot</Text>
+                        </li>
+                      </ol>
+                    </Box>
+                  </Flex>
+                </Flex>
+              </CardBody>
+            </Card>
+            <Card p="16px" display="flex" align="center" justify="center">
+              <CardBody>
+                <Flex
+                  direction="column"
+                  align="center"
+                  justify="center"
+                  w="100%"
+                  py="14px"
+                >
+                  <IconBox as="box" h={"60px"} w={"60px"} bg={iconBlue}>
+                    <Icon h={"24px"} w={"24px"} color="white" as={FaClock} />
+                  </IconBox>
+                  <Flex
+                    direction="column"
+                    m="14px"
+                    justify="center"
+                    textAlign="center"
+                    align="center"
+                    w="100%"
+                  >
+                    <Text fontSize="md" color={textColor} fontWeight="bold">
+                      Date
+                    </Text>
+                    <Text
+                      mb="24px"
+                      fontSize="xs"
+                      color="gray.400"
+                      fontWeight="semibold"
+                    >
+                      {
+                        [
+                          "Sunday",
+                          "Monday",
+                          "Tuesday",
+                          "Wednesday",
+                          "Thursday",
+                          "Friday",
+                          "Saturday",
+                        ][new Date().getDay()]
+                      }
+                    </Text>
+                    <HSeparator />
+                  </Flex>
+                  <Text fontSize="lg" color={textColor} fontWeight="bold">
+                    {new Date().toLocaleDateString()}
+                  </Text>
+                </Flex>
+              </CardBody>
+            </Card>
+            <Card p="16px" display="flex" align="center" justify="center">
+              <CardBody>
+                <Flex direction="column" align="center" w="100%" py="14px">
+                  <IconBox as="box" h={"60px"} w={"60px"} bg={iconBlue}>
+                    <Icon
+                      h={"24px"}
+                      w={"24px"}
+                      color="white"
+                      as={FaCalculator}
+                    />
+                  </IconBox>
+                  <Flex
+                    direction="column"
+                    m="14px"
+                    justify="center"
+                    textAlign="center"
+                    align="center"
+                    w="100%"
+                  >
+                    <Text fontSize="md" color={textColor} fontWeight="bold">
+                      Total
+                    </Text>
+                    <Text
+                      mb="24px"
+                      fontSize="xs"
+                      color="gray.400"
+                      fontWeight="semibold"
+                    >
+                      Saved Passwords
+                    </Text>
+                    <HSeparator />
+                  </Flex>
+                  <Text fontSize="lg" color={textColor} fontWeight="bold">
+                    60
+                  </Text>
+                </Flex>
+              </CardBody>
+            </Card>
+          </Grid>
+          {/* <Card p="16px" mt="24px">
+            <CardHeader>
+              <Flex
+                justify="space-between"
+                align="center"
+                minHeight="60px"
+                w="100%"
+              >
+                <Text fontSize="lg" color={textColor} fontWeight="bold">
+                  Navigation
+                </Text>
+              </Flex>
+            </CardHeader>
+            <CardBody>
+              <Flex
+                direction={{ sm: "column", md: "row" }}
+                align="center"
+                w="100%"
+                justify="center"
+                py="1rem"
+              >
+                <Flex
+                  p="1rem"
+                  bg={colorMode === "dark" ? "navy.900" : "transparent"}
+                  borderRadius="15px"
+                  width="100%"
+                  border="1px solid"
+                  borderColor={borderColor}
+                  align="center"
+                  mb={{ sm: "24px", md: "0px" }}
+                  me={{ sm: "0px", md: "24px" }}
+                >
+                  <IconBox me="10px" w="25px" h="22px">
+                    <MastercardIcon w="100%" h="100%" />
+                  </IconBox>
+                  <Text color="gray.400" fontSize="md" fontWeight="semibold">
+                    7812 2139 0823 XXXX
+                  </Text>
+                  <Spacer />
+                  <Button p="0px" w="16px" h="16px" variant="no-effects">
+                    <Icon
+                      as={FaPencilAlt}
+                      color={colorMode === "dark" && "white"}
+                    />
+                  </Button>
+                </Flex>
+                <Flex
+                  p="16px"
+                  bg={colorMode === "dark" ? "navy.900" : "transparent"}
+                  borderRadius="15px"
+                  width="100%"
+                  border="1px solid"
+                  borderColor={borderColor}
+                  align="center"
+                >
+                  <IconBox me="10px" w="25px" h="25px">
+                    <VisaIcon w="100%" h="100%" />
+                  </IconBox>
+                  <Text color="gray.400" fontSize="md" fontWeight="semibold">
+                    7812 2139 0823 XXXX
+                  </Text>
+                  <Spacer />
+                  <Button
+                    p="0px"
+                    bg="transparent"
+                    w="16px"
+                    h="16px"
+                    variant="no-effects"
+                  >
+                    <Icon
+                      as={FaPencilAlt}
+                      color={colorMode === "dark" && "white"}
+                    />
+                  </Button>
+                </Flex>
+              </Flex>
+            </CardBody>
+          </Card> */}
+        </Box>
+        {/* <Card
+          p="22px"
+          my={{ sm: "24px", lg: "0px" }}
+          ms={{ sm: "0px", lg: "24px" }}
+        >
+          <CardHeader>
+            <Flex justify="space-between" align="center" mb="1rem" w="100%">
+              <Text fontSize="lg" color={textColor} fontWeight="bold">
+                Invoices
+              </Text>
+              <Button
+                variant="outlined"
+                color={colorMode === "dark" && "white"}
+                borderColor={colorMode === "dark" && "white"}
+                _hover={colorMode === "dark" && "none"}
+                minW="110px"
+                maxH="35px"
+              >
+                VIEW ALL
+              </Button>
+            </Flex>
+          </CardHeader>
+          <CardBody>
+            <Flex direction="column" w="100%">
+              {invoicesData.map((row, idx) => {
+                return (
+                  <InvoicesRow
+                    date={row.date}
+                    code={row.code}
+                    price={row.price}
+                    logo={row.logo}
+                    format={row.format}
+                    key={idx}
+                  />
+                );
+              })}
+            </Flex>
+          </CardBody>
+        </Card> */}
+      </Grid>
+    </Flex>
   );
 }
+
+export default Dashboard;
