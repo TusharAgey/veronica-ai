@@ -159,3 +159,123 @@ export const readText = (event, setInputText) => {
     setInputText(decryptPassword256Bit(response, key));
   });
 };
+
+const percent = (quantity, percent) => {
+  return (quantity * percent) / 100;
+};
+
+const getTaxViaNewRegime = (amt) => {
+  const taxableAmt = amt - 50000; //This is standard deduction
+  const taxBuckets = taxableAmt / 300000;
+  const lastBucket = taxBuckets - Math.floor(taxBuckets);
+  const sureBuckets = Math.floor(taxBuckets);
+  if (taxableAmt <= 700000) {
+    return 0;
+  }
+  if (taxBuckets <= 5) {
+    const taxBrackets = {
+      1: 0,
+      2: 5,
+      3: 10,
+      4: 15,
+      5: 20,
+      6: 30,
+    };
+
+    const applicableTax = [...Array(sureBuckets).keys()].reduce(
+      (acc, bucketNo) => {
+        const taxForThisBucket = taxBrackets[bucketNo + 1];
+        return acc + percent(300000, taxForThisBucket);
+      },
+      0
+    );
+
+    return (
+      applicableTax +
+      percent(300000 * lastBucket, taxBrackets[sureBuckets + 1]) +
+      percent(
+        applicableTax +
+          percent(300000 * lastBucket, taxBrackets[sureBuckets + 1]),
+        4
+      ) // 4% Health and Education CESS
+    );
+  }
+
+  const allThirtyPercentIncome = taxableAmt - 1500000;
+  const thirtyPercentTax = percent(allThirtyPercentIncome, 30);
+  const taxUpto15L = 150000;
+  return (
+    thirtyPercentTax + taxUpto15L + percent(thirtyPercentTax + taxUpto15L, 4) // 4% Health and Education CESS
+  );
+};
+
+export const getPensionCalc = () => {
+  const normalPension = 2000 * 12;
+  const afterCommutationPension = 1000 * 12;
+  const commutationInHand = 300000;
+  const corpusGrowthPercentage = 8;
+
+  const data = {
+    year: [],
+    pensionNormal: [],
+    pensionCommuted: [],
+    taxNormal: [],
+    taxCommuted: [],
+    effectiveNormalCorpus: [],
+    effectiveCommutedCorpus: [],
+  };
+
+  [...Array(20).keys()].forEach((year) => {
+    const realPension = year < 15 ? afterCommutationPension : normalPension;
+    data["year"].push(year);
+    data["pensionNormal"].push(normalPension);
+    data["pensionCommuted"].push(realPension);
+    const corpusFromPreviousYear =
+      year === 0 ? 0 : data["effectiveNormalCorpus"][year - 1];
+
+    const corpusFromPreviousYearCommuted =
+      year === 0
+        ? commutationInHand
+        : data["effectiveCommutedCorpus"][year - 1];
+
+    const earningFromPreviousYear =
+      year > 0
+        ? percent(
+            data["effectiveNormalCorpus"][year - 1],
+            corpusGrowthPercentage
+          )
+        : 0;
+
+    const earningFromPreviousYearCommuted =
+      year > 0
+        ? percent(
+            data["effectiveCommutedCorpus"][year - 1],
+            corpusGrowthPercentage
+          )
+        : 0;
+
+    data["taxCommuted"].push(
+      getTaxViaNewRegime(realPension + earningFromPreviousYearCommuted)
+    );
+
+    data["effectiveCommutedCorpus"].push(
+      realPension +
+        earningFromPreviousYearCommuted -
+        getTaxViaNewRegime(realPension + earningFromPreviousYearCommuted) +
+        corpusFromPreviousYearCommuted
+    );
+
+    data["taxNormal"].push(
+      getTaxViaNewRegime(normalPension + earningFromPreviousYear)
+    );
+
+    data["effectiveNormalCorpus"].push(
+      normalPension +
+        earningFromPreviousYear -
+        getTaxViaNewRegime(normalPension + earningFromPreviousYear) +
+        corpusFromPreviousYear
+    );
+  });
+
+  return data;
+};

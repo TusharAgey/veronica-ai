@@ -1,27 +1,82 @@
 // Chakra imports
 import {
   Box,
-  Button,
   Flex,
   Grid,
   Icon,
   Text,
   useColorMode,
   useColorModeValue,
+  Table,
+  Thead,
+  Tbody,
+  Tfoot,
+  Tr,
+  Th,
+  Td,
+  TableCaption,
+  TableContainer,
+  Spacer,
 } from "@chakra-ui/react";
 // Assets
 import BackgroundCard1 from "assets/img/BackgroundCard1.png";
 // Custom components
 import Card from "components/Card/Card.js";
 import CardBody from "components/Card/CardBody.js";
-import CardHeader from "components/Card/CardHeader.js";
 import IconBox from "components/Icons/IconBox";
 import { HSeparator } from "components/Separator/Separator";
-import InvoicesRow from "components/Tables/InvoicesRow";
 import React from "react";
 import { FaCalculator, FaClock } from "react-icons/fa";
 import { RiRobot2Fill } from "react-icons/ri";
-import { invoicesData } from "variables/general";
+import { getPensionCalc } from "../../utils";
+const getPensionTable = () => {
+  //   year: [],
+  //   pensionNormal: [],
+  //   pensionCommuted: [],
+  //   taxNormal: [],
+  //   taxCommuted: [],
+  //   effectiveNormalCorpus: [],
+  //   effectiveCommutedCorpus: [],
+  const data = getPensionCalc();
+  const rows = data["year"].length;
+  return (
+    <TableContainer>
+      <Table variant="simple">
+        <TableCaption>Pension Commutation Decision?</TableCaption>
+        <Thead>
+          <Tr>
+            <Th isNumeric>Year</Th>
+
+            <Th isNumeric>Normal Pension</Th>
+            <Th isNumeric>Tax</Th>
+            <Th isNumeric>Effective Corpus</Th>
+
+            <Th isNumeric>Commuted Pension</Th>
+            <Th isNumeric>Tax</Th>
+            <Th isNumeric>Effective Corpus + Received upfront pay</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {[...Array(rows).keys()].map((idx) => (
+            <Tr>
+              <Td isNumeric>{data["year"][idx]}</Td>
+
+              <Td isNumeric>{Math.ceil(data["pensionNormal"][idx])}</Td>
+              <Td isNumeric>{Math.ceil(data["taxNormal"][idx])}</Td>
+              <Td isNumeric>{Math.ceil(data["effectiveNormalCorpus"][idx])}</Td>
+
+              <Td isNumeric>{Math.ceil(data["pensionCommuted"][idx])}</Td>
+              <Td isNumeric>{Math.ceil(data["taxCommuted"][idx])}</Td>
+              <Td isNumeric>
+                {Math.ceil(data["effectiveCommutedCorpus"][idx])}
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+    </TableContainer>
+  );
+};
 
 function Dashboard() {
   // Chakra color mode
@@ -297,6 +352,7 @@ function Dashboard() {
           </CardBody>
         </Card> */}
       </Grid>
+      {getPensionTable()}
     </Flex>
   );
 }
