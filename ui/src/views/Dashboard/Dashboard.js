@@ -14,14 +14,11 @@ import BackgroundCard1 from "assets/img/BackgroundCard1.png";
 // Custom components
 import Card from "components/Card/Card.js";
 import CardBody from "components/Card/CardBody.js";
-import CardHeader from "components/Card/CardHeader.js";
 import IconBox from "components/Icons/IconBox";
 import { HSeparator } from "components/Separator/Separator";
-import InvoicesRow from "components/Tables/InvoicesRow";
 import React from "react";
 import { FaCalculator, FaClock } from "react-icons/fa";
 import { RiRobot2Fill } from "react-icons/ri";
-import { invoicesData } from "variables/general";
 
 function Dashboard() {
   // Chakra color mode
