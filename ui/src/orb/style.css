@@ -1,0 +1,30 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #050611, #000);
+  font-family: system-ui;
+}
+
+#start {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #6ff;
+  color: #6ff;
+  cursor: pointer;
+  z-index: 10;
+}
+
+#state {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: #6ff;
+  letter-spacing: 2px;
+  opacity: 0.7;
+  z-index: 10;
+}
