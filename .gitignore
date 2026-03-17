@@ -2,6 +2,8 @@
 .vscode/
 .idea/
 
+IDEAs.md
+Plan.md
 # Vagrant
 .vagrant/
 
@@ -143,3 +145,4 @@ bower_components
 psd
 thumb
 sketch
+ui/src/views/ChatBot/webserver-testing.js

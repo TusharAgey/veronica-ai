@@ -14,6 +14,7 @@ CORS(app, support_credentials=True)
 
 root = safe_join(os.path.dirname(__file__), 'code')
 javaFiles = safe_join(os.path.dirname(__file__), 'code')
+imageFiles = safe_join(os.path.dirname(__file__), 'images')
 
 # Setup logging config
 logging.basicConfig(filename="userlog.log",
@@ -34,6 +35,10 @@ def static_proxy(path):
 @app.route('/<path:path>', methods=['GET'])
 def static_proxy_media(path):
     return send_from_directory(javaFiles, path)
+
+@app.route('/images/<path:path>', methods=['GET'])
+def static_proxy_images(path):
+    return send_from_directory(imageFiles, path)
 
 if __name__ == "__main__":
     DB_CREATION_STATUS = database_resource.createDatabase(logger);
