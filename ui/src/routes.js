@@ -6,8 +6,6 @@ import PasswordManager from "./views/PasswordManager/PasswordManager";
 import DiaryManager from "./views/Diary/DiaryManager";
 import { Icon } from "@chakra-ui/icons";
 import { MdLock, MdBookOnline, MdChat } from "react-icons/md";
-import {} from "react-icons/md";
-
 import { HomeIcon } from "components/Icons/Icons";
 
 const dashRoutes = [
