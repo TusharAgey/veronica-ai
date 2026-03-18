@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask import request
-from flask import escape
+from markupsafe import escape
 from sqlalchemy import insert, select, MetaData
 from database_resource import getDatabaseEngine, getPasswordTable
 from domain.UserPassword import UserPassword
