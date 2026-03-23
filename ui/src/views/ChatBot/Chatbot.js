@@ -3,6 +3,7 @@
 
 import { MessageBoxChat } from "../../components/Message/MessageBoxChat";
 import {
+  SimpleGrid,
   Button,
   Flex,
   Icon,
@@ -17,6 +18,7 @@ import { useState } from "react";
 import { MdAutoAwesome, MdBolt } from "react-icons/md";
 import Bg from "../../assets/img/bg-image.png";
 import { getChatBotResponseAndSetMessage } from "./chatBotUtils";
+import HologramModal from "./HologramModal";
 
 const botsBackStory = {
   "code-bot":
@@ -28,6 +30,11 @@ const botsBackStory = {
     "This is a conversation between Tushar and Spyro, a Space Pirate. " +
     "Spyro is devious, great at finding secrets of the space, good at planatery exploration. " +
     "Has knowledge of all the constellations and is specially fond of the Orion!",
+
+  "prompt-master":
+    "This is a conversation between Tushar and Prompto, a Prompt Writer for image generation softwares. " +
+    "Prompto is good at writing prompts that when given to stable diffusion, generates 4k realistic looking images. " +
+    "Prompto also provides detailed long prompts with appropriate weights.",
 };
 
 export const Chat = () => {
@@ -42,7 +49,10 @@ export const Chat = () => {
   const [messages, setMessages] = useState({
     "code-bot": [],
     "space-pirate": [],
+    "prompt-master": [],
   });
+
+  const [isHologramOpen, setHologramOpen] = useState(false);
 
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
   const inputColor = useColorModeValue("navy.700", "white");
@@ -61,6 +71,7 @@ export const Chat = () => {
     { color: "gray.500" },
     { color: "whiteAlpha.600" }
   );
+  const [visualizationEnabled, setVisualizationEnabled] = useState(false); // Incomplete feature
   const handleUserQuery = () => {
     const userInput = document.getElementById("user-text-input").value;
 
@@ -81,7 +92,6 @@ export const Chat = () => {
     };
     setMessages(updatedMessages);
     getChatBotResponseAndSetMessage(
-      userInput,
       updatedMessages,
       setMessages,
       setLoading,
@@ -92,160 +102,248 @@ export const Chat = () => {
   };
 
   return (
-    <Flex
-      w="100%"
-      pt={{ base: "70px", md: "0px" }}
-      direction="column"
-      position="relative"
-    >
-      <Img
-        src={Bg}
-        position={"absolute"}
-        w="350px"
-        left="50%"
-        top="50%"
-        transform={"translate(-50%, -50%)"}
-      />
-      <Flex
-        direction="column"
-        mx="auto"
-        w={{ base: "100%", md: "100%", xl: "100%" }}
-        minH={{ base: "75vh", "2xl": "85vh" }}
-        maxW="1000px"
-      >
-        {/* Model Change */}
-        <Flex direction={"column"} w="100%">
+    <>
+      {isHologramOpen ? (
+        <HologramModal
+          isOpen={isHologramOpen}
+          onClose={() => setHologramOpen(false)}
+        />
+      ) : (
+        <Flex
+          w="100%"
+          pt={{ base: "70px", md: "0px" }}
+          direction="column"
+          position="relative"
+        >
+          {!visualizationEnabled && (
+            <Img
+              src={Bg}
+              position={"absolute"}
+              w="350px"
+              left="50%"
+              top="50%"
+              transform={"translate(-50%, -50%)"}
+            />
+          )}
           <Flex
+            direction="column"
             mx="auto"
-            zIndex="2"
-            w="max-content"
-            mb="20px"
-            borderRadius="60px"
+            w={{ base: "100%", md: "100%", xl: "100%" }}
+            minH={{ base: "75vh", "2xl": "85vh" }}
+            maxW="1000px"
           >
-            <Flex
-              cursor={"pointer"}
-              transition="0.3s"
-              justify={"center"}
-              align="center"
-              bg={model === "code-bot" ? buttonBg : "transparent"}
-              w="174px"
-              h="70px"
-              boxShadow={model === "code-bot" ? buttonShadow : "none"}
-              borderRadius="14px"
-              color={textColor}
-              fontSize="18px"
-              fontWeight={"700"}
-              onClick={() => setModel("code-bot")}
-            >
+            {/* Model Change */}
+            <Flex direction={"column"} w="100%">
               <Flex
-                borderRadius="full"
-                justify="center"
-                align="center"
-                bg={bgIcon}
-                me="10px"
-                h="39px"
-                w="39px"
+                mx="auto"
+                zIndex="2"
+                w="max-content"
+                mb="20px"
+                borderRadius="60px"
               >
-                <Icon
-                  as={MdAutoAwesome}
-                  width="20px"
-                  height="20px"
-                  color={iconColor}
-                />
+                <Flex
+                  cursor={"pointer"}
+                  transition="0.3s"
+                  justify={"center"}
+                  align="center"
+                  bg={model === "code-bot" ? buttonBg : "transparent"}
+                  w="174px"
+                  h="70px"
+                  boxShadow={model === "code-bot" ? buttonShadow : "none"}
+                  borderRadius="14px"
+                  color={textColor}
+                  fontSize="18px"
+                  fontWeight={"700"}
+                  onClick={() => setModel("code-bot")}
+                >
+                  <Flex
+                    borderRadius="full"
+                    justify="center"
+                    align="center"
+                    bg={bgIcon}
+                    me="10px"
+                    h="39px"
+                    w="39px"
+                  >
+                    <Icon
+                      as={MdAutoAwesome}
+                      width="20px"
+                      height="20px"
+                      color={iconColor}
+                    />
+                  </Flex>
+                  Code Bot
+                </Flex>
+                <Flex
+                  cursor={"pointer"}
+                  transition="0.3s"
+                  justify={"center"}
+                  align="center"
+                  bg={model === "space-pirate" ? buttonBg : "transparent"}
+                  w="164px"
+                  h="70px"
+                  boxShadow={model === "space-pirate" ? buttonShadow : "none"}
+                  borderRadius="14px"
+                  color={textColor}
+                  fontSize="18px"
+                  fontWeight={"700"}
+                  onClick={() => setModel("space-pirate")}
+                >
+                  <Flex
+                    borderRadius="full"
+                    justify="center"
+                    align="center"
+                    bg={bgIcon}
+                    me="10px"
+                    h="39px"
+                    w="39px"
+                  >
+                    <Icon
+                      as={MdBolt}
+                      width="20px"
+                      height="20px"
+                      color={iconColor}
+                    />
+                  </Flex>
+                  Space Pirate
+                </Flex>
+                <Flex
+                  cursor={"pointer"}
+                  transition="0.3s"
+                  justify={"center"}
+                  align="center"
+                  bg={model === "prompt-master" ? buttonBg : "transparent"}
+                  w="164px"
+                  h="70px"
+                  boxShadow={model === "prompt-master" ? buttonShadow : "none"}
+                  borderRadius="14px"
+                  color={textColor}
+                  fontSize="18px"
+                  fontWeight={"700"}
+                  onClick={() => setModel("prompt-master")}
+                >
+                  <Flex
+                    borderRadius="full"
+                    justify="center"
+                    align="center"
+                    bg={bgIcon}
+                    me="10px"
+                    h="39px"
+                    w="39px"
+                  >
+                    <Icon
+                      as={MdBolt}
+                      width="20px"
+                      height="20px"
+                      color={iconColor}
+                    />
+                  </Flex>
+                  prompto
+                </Flex>
+                <Flex
+                  cursor={"pointer"}
+                  transition="0.3s"
+                  justify={"center"}
+                  align="center"
+                  bg={"transparent"}
+                  w="164px"
+                  h="70px"
+                  boxShadow={"none"}
+                  borderRadius="14px"
+                  color={textColor}
+                  fontSize="18px"
+                  fontWeight={"700"}
+                  onClick={() => setHologramOpen(true)}
+                >
+                  <Flex
+                    borderRadius="full"
+                    justify="center"
+                    align="center"
+                    bg={bgIcon}
+                    me="10px"
+                    h="39px"
+                    w="39px"
+                  >
+                    <Icon
+                      as={MdBolt}
+                      width="20px"
+                      height="20px"
+                      color={iconColor}
+                    />
+                  </Flex>
+                  Hologram
+                </Flex>
               </Flex>
-              Code Bot
             </Flex>
+            <SimpleGrid columns={visualizationEnabled ? 2 : 1}>
+              <MessageBoxChat
+                messages={messages[model]}
+                isLoading={loading}
+                currentCompletionResponse={currentCompletionResponse}
+              />
+              {visualizationEnabled && (
+                <Img
+                  height="65vh"
+                  src="http://localhost:8080/images/2023-07-01_00-00-00_UTC.jpg"
+                ></Img>
+              )}
+            </SimpleGrid>
+            <Spacer />
+            {/* Chat Input */}
             <Flex
-              cursor={"pointer"}
-              transition="0.3s"
-              justify={"center"}
-              align="center"
-              bg={model === "space-pirate" ? buttonBg : "transparent"}
-              w="164px"
-              h="70px"
-              boxShadow={model === "space-pirate" ? buttonShadow : "none"}
-              borderRadius="14px"
-              color={textColor}
-              fontSize="18px"
-              fontWeight={"700"}
-              onClick={() => setModel("space-pirate")}
+              ms={{ base: "0px", xl: "60px" }}
+              mt="20px"
+              justifySelf={"flex-end"}
+              _disabled={loading}
             >
-              <Flex
-                borderRadius="full"
-                justify="center"
-                align="center"
-                bg={bgIcon}
+              <Input
+                disabled={loading}
+                minH="54px"
+                h="100%"
+                border="1px solid"
+                borderColor={borderColor}
+                borderRadius="45px"
+                p="15px 20px"
+                autoComplete="off"
                 me="10px"
-                h="39px"
-                w="39px"
+                fontSize="sm"
+                fontWeight="500"
+                _focus={{ borderColor: "none" }}
+                color={inputColor}
+                _placeholder={placeholderColor}
+                placeholder="Type your message here..."
+                id="user-text-input"
+                onKeyDown={(event) =>
+                  event.key === "Enter" && handleUserQuery()
+                }
+              />
+              <Button
+                variant="primary"
+                py="20px"
+                px="16px"
+                fontSize="sm"
+                borderRadius="45px"
+                ms="auto"
+                h="54px"
+                _hover={{
+                  boxShadow:
+                    "0px 21px 27px -10px rgba(96, 60, 255, 0.48) !important",
+                  bg:
+                    "linear-gradient(15.46deg, #4A25E1 26.3%, #7B5AFF 86.4%) !important",
+                  _disabled: {
+                    bg:
+                      "linear-gradient(15.46deg, #4A25E1 26.3%, #7B5AFF 86.4%)",
+                  },
+                }}
+                onClick={handleUserQuery}
+                isLoading={loading ? true : false}
               >
-                <Icon
-                  as={MdBolt}
-                  width="20px"
-                  height="20px"
-                  color={iconColor}
-                />
-              </Flex>
-              Space Pirate
+                <SendIcon height={20} />
+              </Button>
             </Flex>
           </Flex>
         </Flex>
-        <MessageBoxChat
-          messages={messages[model]}
-          isLoading={loading}
-          currentCompletionResponse={currentCompletionResponse}
-        />
-        <Spacer />
-        {/* Chat Input */}
-        <Flex
-          ms={{ base: "0px", xl: "60px" }}
-          mt="20px"
-          justifySelf={"flex-end"}
-          _disabled={loading}
-        >
-          <Input
-            disabled={loading}
-            minH="54px"
-            h="100%"
-            border="1px solid"
-            borderColor={borderColor}
-            borderRadius="45px"
-            p="15px 20px"
-            autoComplete="off"
-            me="10px"
-            fontSize="sm"
-            fontWeight="500"
-            _focus={{ borderColor: "none" }}
-            color={inputColor}
-            _placeholder={placeholderColor}
-            placeholder="Type your message here..."
-            id="user-text-input"
-            onKeyDown={(event) => event.key === "Enter" && handleUserQuery()}
-          />
-          <Button
-            variant="primary"
-            py="20px"
-            px="16px"
-            fontSize="sm"
-            borderRadius="45px"
-            ms="auto"
-            h="54px"
-            _hover={{
-              boxShadow:
-                "0px 21px 27px -10px rgba(96, 60, 255, 0.48) !important",
-              bg:
-                "linear-gradient(15.46deg, #4A25E1 26.3%, #7B5AFF 86.4%) !important",
-              _disabled: {
-                bg: "linear-gradient(15.46deg, #4A25E1 26.3%, #7B5AFF 86.4%)",
-              },
-            }}
-            onClick={handleUserQuery}
-            isLoading={loading ? true : false}
-          >
-            <SendIcon height={20} />
-          </Button>
-        </Flex>
-      </Flex>
-    </Flex>
+      )}
+    </>
   );
 };
