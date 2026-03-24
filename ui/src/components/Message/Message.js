@@ -4,7 +4,7 @@ import MessageBubble from "./MessageBubble";
 import MessageRenderer from "./MessageRenderer";
 import MessageLoadingSkeletonText from "./MessageLoadingSkeletonText";
 
-const Message = ({ message, idx, messageRef }) => {
+const Message = React.memo(({ message, idx, messageRef }) => {
   const fromAI = message.from === "ai";
   if (message === "refForLatestScrollFocus") {
     return <div ref={messageRef}></div>;
@@ -22,6 +22,6 @@ const Message = ({ message, idx, messageRef }) => {
       )}
     </MessageBubble>
   );
-};
+});
 
 export default Message;
