@@ -16,7 +16,6 @@ export const MessageBoxChat = (props) => {
     from: "ai",
     content: currentCompletionResponse,
   };
-
   useEffect(() => {
     messagesEndRef.current.scrollIntoView();
   });
@@ -41,6 +40,7 @@ export const MessageBoxChat = (props) => {
         ].map((message, idx) => (
           <Message
             id={idx}
+            key={idx}
             message={message}
             idx={idx}
             messageRef={messagesEndRef}
