@@ -1,5 +1,5 @@
 import { llama } from "./completion.js";
-
+import { USER, AI, ASSISTANT } from "../../variables/const.js";
 const clearUserInputBox = () => {
   document.getElementById("user-text-input").value = "";
   document.getElementById("user-text-input").focus();
@@ -13,19 +13,17 @@ const getPrompt = (allMessages, model) => {
   // and never fails to answer any requests immediately and with precision.
   // Master of Javascript!\n\nUser: wow\ncode-bot:"
 
-  const promptifiedMessages = allMessages[model].reduce(
-    (acc, message) =>
-      message.from === "user"
-        ? acc + "\n Tushar:" + message.content
-        : acc + "\n " + model + ":" + message.content,
-    ""
-  );
+  const promptifiedMessages = allMessages[model].map((message) => {
+    return {
+      role: message.from === USER ? USER : ASSISTANT,
+      content: message.content,
+    };
+  });
 
   return promptifiedMessages;
 };
 
 export const getChatBotResponseAndSetMessage = async (
-  query,
   allMessages,
   setMessages,
   setLoading,
@@ -34,14 +32,10 @@ export const getChatBotResponseAndSetMessage = async (
   setCurrentCompletionResponse
 ) => {
   let data = "";
-  const request = llama(
-    getPrompt(allMessages, model),
-    model,
-    botsBackStory[model]
-  );
+  const request = llama(getPrompt(allMessages, model), botsBackStory[model]);
 
   for await (const chunk of request) {
-    data += chunk.data.content;
+    data += chunk;
     setCurrentCompletionResponse(data);
   }
 
@@ -50,7 +44,7 @@ export const getChatBotResponseAndSetMessage = async (
     [model]: [
       ...allMessages[model],
       {
-        from: "ai",
+        from: AI,
         content: data,
       },
     ],
