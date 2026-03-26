@@ -1,5 +1,5 @@
 import { llama } from "./completion.js";
-
+import { USER, AI, ASSISTANT } from "../../variables/const.js";
 const clearUserInputBox = () => {
   document.getElementById("user-text-input").value = "";
   document.getElementById("user-text-input").focus();
@@ -15,7 +15,7 @@ const getPrompt = (allMessages, model) => {
 
   const promptifiedMessages = allMessages[model].map((message) => {
     return {
-      role: message.from === "user" ? "user" : "assistant",
+      role: message.from === USER ? USER : ASSISTANT,
       content: message.content,
     };
   });
@@ -44,7 +44,7 @@ export const getChatBotResponseAndSetMessage = async (
     [model]: [
       ...allMessages[model],
       {
-        from: "ai",
+        from: AI,
         content: data,
       },
     ],

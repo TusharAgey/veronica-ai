@@ -1,3 +1,9 @@
+import {
+  ASSISTANT,
+  SYSTEM,
+  LLAMA_RESPONSE_TERMINATOR_CONTENT,
+} from "../../variables/const";
+
 // Reference - https://github.com/ggerganov/llama.cpp/blob/master/examples/server/public/completion.js
 const paramDefaults = {
   stream: true,
@@ -18,15 +24,15 @@ const paramDefaults = {
   grammar: "",
   n_probs: 0,
   image_data: [],
-  cache_prompt: false,
+  cache_prompt: false, // Stop caching of prompt to ensure faster response and less memory usage.
   slot_id: 0,
-  max_tokens: 100,
+  max_tokens: 100, // This is to limit the tokens generated from LLAMA to ensure less memory footprint.
 };
 
 // Logic to cut short the context window - basically, only work on the latest prompt OR summarize. <IMPORTANT>
 function optimizePayload(messages) {
-  const MAX_HISTORY = 10;
-  const MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD = 150;
+  const MAX_HISTORY = 10; // To only keep last 10 messages in the prompt to ensure less memory footprint. This helps prune the context if the available memory is less.
+  const MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD = 150; // To only keep first 150 characters of the assistant response in subsequent prompts to reduce prompt size.
   const compress = (text) =>
     text
       .toLowerCase()
@@ -35,16 +41,18 @@ function optimizePayload(messages) {
       .replace(/\s+/g, " ")
       .trim();
 
-  const shortenAssistant = (text) =>
-    text.split("\n")[0].split(/[.,:\-]+/)[0].length >
-    MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD
-      ? text
-          .split("\n")[0]
-          .split(/[.,:\-]+/)[0]
-          .substring(0, MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD)
-      : text.split("\n")[0].split(/[.,:\-]+/)[0]; // First fragment or only first 150 charaters.
+  const shortenAssistant = (text) => {
+    const shortenedAssitantResponse = text.split("\n")[0].split(/[.,:\-]+/)[0];
+    return shortenedAssitantResponse.length >
+      MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD
+      ? shortenedAssitantResponse.substring(
+          0,
+          MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD
+        )
+      : shortenedAssitantResponse; // First fragment or only first 150 charaters.
+  };
 
-  const nonSystem = messages.filter((m) => m.role !== "system");
+  const nonSystem = messages.filter((m) => m.role !== SYSTEM);
 
   // keep last few messages only
   const recent = nonSystem.slice(-MAX_HISTORY);
@@ -54,7 +62,7 @@ function optimizePayload(messages) {
   for (let msg of recent) {
     let content = compress(msg.content);
 
-    if (msg.role === "assistant") {
+    if (msg.role === ASSISTANT) {
       content = shortenAssistant(content);
     }
 
@@ -67,6 +75,7 @@ function optimizePayload(messages) {
   return optimized;
 }
 
+// Backstory is a system prompt that sets the tone/behavior of the LLM behind the scenes. It helps the LLM assume a role and respond in a manner.
 export async function* llama(prompt, backstory, params = {}, config = {}) {
   let controller = config.controller;
 
@@ -76,7 +85,7 @@ export async function* llama(prompt, backstory, params = {}, config = {}) {
 
   const finalPrompt = [
     {
-      role: "system",
+      role: SYSTEM,
       content: backstory,
     },
     ...optimizePayload(prompt),
@@ -115,7 +124,7 @@ export async function* llama(prompt, backstory, params = {}, config = {}) {
       const text = decoder.decode(result.value);
 
       // Split the text into lines
-      let lines = text.split("\n");
+      const lines = text.split("\n");
 
       // Parse all sse events and add them to result
       for (const line of lines) {
@@ -124,7 +133,7 @@ export async function* llama(prompt, backstory, params = {}, config = {}) {
         }
         // since we know this is llama.cpp, let's just decode the json in data
         if (result.value) {
-          if (line === "data: [DONE]") {
+          if (line === LLAMA_RESPONSE_TERMINATOR_CONTENT) {
             cont = false;
             break;
           }
