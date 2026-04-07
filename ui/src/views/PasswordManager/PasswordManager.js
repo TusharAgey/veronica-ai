@@ -13,11 +13,11 @@ import {
   Select,
 } from "@chakra-ui/react";
 // Custom components
-import Card from "components/Card/Card.js";
-import CardBody from "components/Card/CardBody.js";
-import CardHeader from "components/Card/CardHeader.js";
-import IconBox from "components/Icons/IconBox";
-import { HSeparator } from "components/Separator/Separator";
+import Card from "../../components/Card/Card.js";
+import CardBody from "../../components/Card/CardBody.js";
+import CardHeader from "../../components/Card/CardHeader.js";
+import IconBox from "../../components/Icons/IconBox";
+import { HSeparator } from "../../components/Separator/Separator";
 import React, { useEffect } from "react";
 import { pwdManagerFields } from "../../variables/const";
 import { FaCalculator } from "react-icons/fa";

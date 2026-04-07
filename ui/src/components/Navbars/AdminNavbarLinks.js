@@ -18,14 +18,14 @@ import {
   ChakraLogoLight,
   ProfileIcon,
   SettingsIcon,
-} from "components/Icons/Icons";
+} from "../Icons/Icons";
 // Custom Components
 // import { ItemContent } from "components/Menu/ItemContent";
 // import { SearchBar } from "components/Navbars/SearchBar/SearchBar";
-import { SidebarResponsive } from "components/Sidebar/Sidebar";
+import { SidebarResponsive } from "../Sidebar/Sidebar";
 import React from "react";
 import { getGreetingByTime } from "../../utils";
-import routes from "routes.js";
+import routes from "../../routes.js";
 
 export default function HeaderLinks(props) {
   const {

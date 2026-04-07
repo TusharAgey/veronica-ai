@@ -10,12 +10,12 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 // Assets
-import BackgroundCard1 from "assets/img/BackgroundCard1.png";
+import BackgroundCard1 from "../../assets/img/BackgroundCard1.png";
 // Custom components
-import Card from "components/Card/Card.js";
-import CardBody from "components/Card/CardBody.js";
-import IconBox from "components/Icons/IconBox";
-import { HSeparator } from "components/Separator/Separator";
+import Card from "../../components/Card/Card.js";
+import CardBody from "../../components/Card/CardBody.js";
+import IconBox from "../../components/Icons/IconBox";
+import { HSeparator } from "../../components/Separator/Separator";
 import React from "react";
 import { FaCalculator, FaClock } from "react-icons/fa";
 import { RiRobot2Fill } from "react-icons/ri";

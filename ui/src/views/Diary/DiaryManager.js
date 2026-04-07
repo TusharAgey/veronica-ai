@@ -13,7 +13,7 @@ import {
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 // Custom components
-import Card from "components/Card/Card.js";
+import Card from "../../components/Card/Card.js";
 import React, { useEffect, useState } from "react";
 import {
   handleAddNewDiaryEntry,

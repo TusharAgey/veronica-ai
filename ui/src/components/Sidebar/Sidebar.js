@@ -16,7 +16,7 @@ import {
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react";
-import IconBox from "components/Icons/IconBox";
+import IconBox from "../Icons/IconBox";
 import {
   renderThumbDark,
   renderThumbLight,
@@ -24,8 +24,8 @@ import {
   renderTrackRTL,
   renderView,
   renderViewRTL,
-} from "components/Scrollbar/Scrollbar";
-import { HSeparator } from "components/Separator/Separator";
+} from "../Scrollbar/Scrollbar";
+import { HSeparator } from "../Separator/Separator";
 // import { SidebarHelp } from "components/Sidebar/SidebarHelp";
 import React from "react";
 import { Scrollbars } from "react-custom-scrollbars";

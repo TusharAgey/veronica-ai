@@ -7,7 +7,7 @@ import {
   JiraLogo,
   SlackLogo,
   SpotifyLogo,
-} from "components/Icons/Icons.js";
+} from "../components/Icons/Icons.js";
 import { AiOutlineExclamation } from "react-icons/ai";
 import {
   FaArrowDown,
