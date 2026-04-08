@@ -4,18 +4,24 @@ import {
   Button,
   Flex,
   HStack,
-  Link, Stack, Text, useColorMode, useColorModeValue
+  Link,
+  Stack,
+  Text,
+  useColorMode,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import {
   ArgonLogoDark,
   ArgonLogoLight,
-  ChakraLogoBlue, ChakraLogoDark,
-  ChakraLogoLight, DocumentIcon,
+  ChakraLogoBlue,
+  ChakraLogoDark,
+  ChakraLogoLight,
+  DocumentIcon,
   HomeIcon,
   PersonIcon,
-  RocketIcon
-} from "components/Icons/Icons";
-import { SidebarResponsive } from "components/Sidebar/Sidebar";
+  RocketIcon,
+} from "../Icons/Icons";
+import { SidebarResponsive } from "../Sidebar/Sidebar";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import routes from "routes.js";

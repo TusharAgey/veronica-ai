@@ -6,28 +6,28 @@ import {
   Box,
   useColorMode,
 } from "@chakra-ui/react";
-import Configurator from "components/Configurator/Configurator";
-import Footer from "components/Footer/Footer.js";
+import Configurator from "../components/Configurator/Configurator";
+import Footer from "../components/Footer/Footer.js";
 import {
   ArgonLogoDark,
   ArgonLogoLight,
   ChakraLogoDark,
   ChakraLogoLight,
   VeronicaLogoLight,
-} from "components/Icons/Icons";
+} from "../components/Icons/Icons";
 // Layout components
-import AdminNavbar from "components/Navbars/AdminNavbar.js";
-import Sidebar from "components/Sidebar/Sidebar.js";
+import AdminNavbar from "../components/Navbars/AdminNavbar.js";
+import Sidebar from "../components/Sidebar/Sidebar.js";
 import React, { useState } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
-import routes from "routes.js";
+import routes from "../routes.js";
 // Custom Chakra theme
 import FixedPlugin from "../components/FixedPlugin/FixedPlugin";
 // Custom components
 import MainPanel from "../components/Layout/MainPanel";
 import PanelContainer from "../components/Layout/PanelContainer";
 import PanelContent from "../components/Layout/PanelContent";
-import bgAdmin from "assets/img/admin-background.png";
+import bgAdmin from "../assets/img/admin-background.png";
 
 export default function Dashboard(props) {
   const { ...rest } = props;

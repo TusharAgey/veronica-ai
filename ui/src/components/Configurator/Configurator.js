@@ -14,7 +14,7 @@ import {
   useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { HSeparator } from "components/Separator/Separator";
+import { HSeparator } from "../Separator/Separator";
 import React, { useState } from "react";
 import GitHubButton from "react-github-btn";
 import { FaFacebook, FaTwitter } from "react-icons/fa";

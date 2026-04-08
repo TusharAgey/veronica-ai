@@ -30,3 +30,9 @@ export const pwdManagerFields = [
     fieldType: "password",
   },
 ];
+
+export const USER = "user";
+export const AI = "ai";
+export const ASSISTANT = "assistant";
+export const SYSTEM = "system";
+export const LLAMA_RESPONSE_TERMINATOR_CONTENT = "data: [DONE]";

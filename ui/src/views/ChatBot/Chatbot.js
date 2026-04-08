@@ -19,6 +19,7 @@ import { MdAutoAwesome, MdBolt } from "react-icons/md";
 import Bg from "../../assets/img/bg-image.png";
 import { getChatBotResponseAndSetMessage } from "./chatBotUtils";
 import HologramModal from "./HologramModal";
+import { USER } from "../../variables/const.js";
 
 const botsBackStory = {
   "code-bot":
@@ -85,7 +86,7 @@ export const Chat = () => {
       [model]: [
         ...messages[model],
         {
-          from: "user",
+          from: USER,
           content: userInput,
         },
       ],

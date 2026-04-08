@@ -1,9 +1,14 @@
+import {
+  ASSISTANT,
+  SYSTEM,
+  LLAMA_RESPONSE_TERMINATOR_CONTENT,
+} from "../../variables/const";
+
 // Reference - https://github.com/ggerganov/llama.cpp/blob/master/examples/server/public/completion.js
 const paramDefaults = {
   stream: true,
   n_predict: 400,
   temperature: 0.7,
-  stop: ["</s>", "Llama:", "User:"],
   repeat_last_n: 256,
   repeat_penalty: 1.18,
   top_k: 40,
@@ -19,35 +24,79 @@ const paramDefaults = {
   grammar: "",
   n_probs: 0,
   image_data: [],
-  cache_prompt: true,
+  cache_prompt: false, // Stop caching of prompt to ensure faster response and less memory usage.
   slot_id: 0,
+  max_tokens: 100, // This is to limit the tokens generated from LLAMA to ensure less memory footprint.
 };
 
-let generation_settings = null;
+// Logic to cut short the context window - basically, only work on the latest prompt OR summarize. <IMPORTANT>
+function optimizePayload(messages) {
+  const MAX_HISTORY = 10; // To only keep last 10 messages in the prompt to ensure less memory footprint. This helps prune the context if the available memory is less.
+  const MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD = 150; // To only keep first 150 characters of the assistant response in subsequent prompts to reduce prompt size.
+  const compress = (text) =>
+    text
+      .toLowerCase()
+      .replace(/[`]/g, "")
+      .replace(/[^\w\s.:/()-]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
 
-export async function* llama(
-  prompt,
-  model,
-  backstory,
-  params = {},
-  config = {}
-) {
+  const shortenAssistant = (text) => {
+    const shortenedAssitantResponse = text.split("\n")[0].split(/[.,:\-]+/)[0];
+    return shortenedAssitantResponse.length >
+      MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD
+      ? shortenedAssitantResponse.substring(
+          0,
+          MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD
+        )
+      : shortenedAssitantResponse; // First fragment or only first 150 charaters.
+  };
+
+  const nonSystem = messages.filter((m) => m.role !== SYSTEM);
+
+  // keep last few messages only
+  const recent = nonSystem.slice(-MAX_HISTORY);
+
+  const optimized = [];
+
+  for (let msg of recent) {
+    let content = compress(msg.content);
+
+    if (msg.role === ASSISTANT) {
+      content = shortenAssistant(content);
+    }
+
+    optimized.push({
+      role: msg.role,
+      content,
+    });
+  }
+
+  return optimized;
+}
+
+// Backstory is a system prompt that sets the tone/behavior of the LLM behind the scenes. It helps the LLM assume a role and respond in a manner.
+export async function* llama(prompt, backstory, params = {}, config = {}) {
   let controller = config.controller;
 
   if (!controller) {
     controller = new AbortController();
   }
 
-  const finalPrompt =
-    backstory + "\n\n" + "User: " + prompt + "\n" + model + ":";
+  const finalPrompt = [
+    {
+      role: SYSTEM,
+      content: backstory,
+    },
+    ...optimizePayload(prompt),
+  ];
 
   const completionParams = {
     ...paramDefaults,
     ...params,
-    prompt: finalPrompt,
-    stop: [...paramDefaults["stop"], model + ":", "Tushar:"],
+    messages: finalPrompt,
   };
-  const response = await fetch("http://127.0.0.1:6792/completion", {
+  const response = await fetch("http://127.0.0.1:6792/v1/chat/completions", {
     method: "POST",
     body: JSON.stringify(completionParams),
     headers: {
@@ -62,7 +111,6 @@ export async function* llama(
   const decoder = new TextDecoder();
 
   let content = "";
-  let leftover = ""; // Buffer for partially read lines
 
   try {
     let cont = true;
@@ -73,50 +121,31 @@ export async function* llama(
         break;
       }
 
-      // Add any leftover data to the current chunk of data
-      const text = leftover + decoder.decode(result.value);
-
-      // Check if the last character is a line break
-      const endsWithLineBreak = text.endsWith("\n");
+      const text = decoder.decode(result.value);
 
       // Split the text into lines
-      let lines = text.split("\n");
-
-      // If the text doesn't end with a line break, then the last line is incomplete
-      // Store it in leftover to be added to the next chunk of data
-      if (!endsWithLineBreak) {
-        leftover = lines.pop();
-      } else {
-        leftover = ""; // Reset leftover if we have a line break at the end
-      }
+      const lines = text.split("\n");
 
       // Parse all sse events and add them to result
-      const regex = /^(\S+):\s(.*)$/gm;
       for (const line of lines) {
-        const match = regex.exec(line);
-        if (match) {
-          result[match[1]] = match[2];
-          // since we know this is llama.cpp, let's just decode the json in data
-          if (result.data) {
-            result.data = JSON.parse(result.data);
-            content += result.data.content;
-
-            // yield
-            yield result;
-
-            // if we got a stop token from server, we will break here
-            if (result.data.stop) {
-              if (result.data.generation_settings) {
-                generation_settings = result.data.generation_settings;
-              }
-              cont = false;
-              break;
-            }
+        if (line === "") {
+          continue;
+        }
+        // since we know this is llama.cpp, let's just decode the json in data
+        if (result.value) {
+          if (line === LLAMA_RESPONSE_TERMINATOR_CONTENT) {
+            cont = false;
+            break;
           }
-          if (result.error) {
-            result.error = JSON.parse(result.error);
-            console.error(`llama.cpp error: ${result.error.content}`);
+          const chunk = JSON.parse(line.replace(/^data:\s/, ""));
+          if (chunk.choices[0].delta.content != null) {
+            content += chunk.choices[0].delta.content;
+            yield chunk.choices[0].delta.content;
           }
+        }
+        if (result.error) {
+          result.error = JSON.parse(result.error);
+          console.error(`llama.cpp error: ${result.error.content}`);
         }
       }
     }
@@ -128,90 +157,5 @@ export async function* llama(
   } finally {
     controller.abort();
   }
-
   return content;
 }
-
-// Call llama, return an event target that you can subcribe to
-//
-// Example:
-//
-//    import { llamaEventTarget } from '/completion.js'
-//
-//    const conn = llamaEventTarget(prompt)
-//    conn.addEventListener("message", (chunk) => {
-//      document.write(chunk.detail.content)
-//    })
-//
-export const llamaEventTarget = (prompt, params = {}, config = {}) => {
-  const eventTarget = new EventTarget();
-  (async () => {
-    let content = "";
-    for await (const chunk of llama(prompt, params, config)) {
-      if (chunk.data) {
-        content += chunk.data.content;
-        eventTarget.dispatchEvent(
-          new CustomEvent("message", { detail: chunk.data })
-        );
-      }
-      if (chunk.data.generation_settings) {
-        eventTarget.dispatchEvent(
-          new CustomEvent("generation_settings", {
-            detail: chunk.data.generation_settings,
-          })
-        );
-      }
-      if (chunk.data.timings) {
-        eventTarget.dispatchEvent(
-          new CustomEvent("timings", { detail: chunk.data.timings })
-        );
-      }
-    }
-    eventTarget.dispatchEvent(new CustomEvent("done", { detail: { content } }));
-  })();
-  return eventTarget;
-};
-
-// Call llama, return a promise that resolves to the completed text. This does not support streaming
-//
-// Example:
-//
-//     llamaPromise(prompt).then((content) => {
-//       document.write(content)
-//     })
-//
-//     or
-//
-//     const content = await llamaPromise(prompt)
-//     document.write(content)
-//
-export const llamaPromise = (prompt, params = {}, config = {}) => {
-  return new Promise(async (resolve, reject) => {
-    let content = "";
-    try {
-      for await (const chunk of llama(prompt, params, config)) {
-        content += chunk.data.content;
-      }
-      resolve(content);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-/**
- * (deprecated)
- */
-export const llamaComplete = async (params, controller, callback) => {
-  for await (const chunk of llama(params.prompt, params, { controller })) {
-    callback(chunk);
-  }
-};
-
-// Get the model info from the server. This is useful for getting the context window and so on.
-export const llamaModelInfo = async () => {
-  if (!generation_settings) {
-    generation_settings = await fetch("/model.json").then((r) => r.json());
-  }
-  return generation_settings;
-};

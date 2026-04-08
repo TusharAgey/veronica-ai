@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 
 import { Button } from "@chakra-ui/react";
-import { decryptPassword256Bit } from "utils";
+import { decryptPassword256Bit } from "../../utils";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 export const AccountDetails = (props) => {
   const [showPwd, setShowPwd] = useState(false);
