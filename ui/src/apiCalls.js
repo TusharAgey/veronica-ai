@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import { LLAMA_SERVER_HOST_PORT } from "./variables/const";
 export const getAccounts = () => {
   return axios.get("http://localhost:8080/password-manager/user/accounts");
 };
@@ -17,6 +17,10 @@ export const laodRandomFile = () => {
   const randomFile = files[Math.floor(Math.random() * files.length)];
 
   return axios.get("http://localhost:8080/" + randomFile);
+};
+
+export const loadLlamaModelDetails = () => {
+  return axios.get(LLAMA_SERVER_HOST_PORT + "/models");
 };
 
 // export const getAllOldAccounts = () => {

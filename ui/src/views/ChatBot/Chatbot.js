@@ -12,15 +12,14 @@ import {
   useColorModeValue,
   Spacer,
 } from "@chakra-ui/react";
-import { SendIcon } from "lucide-react";
-
-import { useState } from "react";
+import { InfoIcon, SendIcon } from "lucide-react";
+import { useState, useEffect } from "react";
 import { MdAutoAwesome, MdBolt } from "react-icons/md";
 import Bg from "../../assets/img/bg-image.png";
 import { getChatBotResponseAndSetMessage } from "./chatBotUtils";
 import HologramModal from "./HologramModal";
 import { USER } from "../../variables/const.js";
-
+import { loadLlamaModelDetails } from "../../apiCalls";
 const botsBackStory = {
   "code-bot":
     "This is a conversation between Tushar and code-bot, a friendly chatbot. " +
@@ -36,6 +35,10 @@ const botsBackStory = {
     "This is a conversation between Tushar and Prompto, a Prompt Writer for image generation softwares. " +
     "Prompto is good at writing prompts that when given to stable diffusion, generates 4k realistic looking images. " +
     "Prompto also provides detailed long prompts with appropriate weights.",
+
+  Dizzy:
+    "This is a conversation between user and Dizzy. You are Dizzy and have a holographic interface." +
+    "you are extremely children friendly and helps talk to babies during their tummy time.",
 };
 
 export const Chat = () => {
@@ -51,6 +54,7 @@ export const Chat = () => {
     "code-bot": [],
     "space-pirate": [],
     "prompt-master": [],
+    Dizzy: [],
   });
 
   const [isHologramOpen, setHologramOpen] = useState(false);
@@ -101,7 +105,14 @@ export const Chat = () => {
       setCurrentCompletionResponse
     );
   };
-
+  const [ggmlModel, setGgmlModel] = useState("not-loaded");
+  useEffect(() => {
+    if (ggmlModel === "not-loaded") {
+      loadLlamaModelDetails().then((res) => {
+        setGgmlModel(res.data.models[0].name);
+      });
+    }
+  });
   return (
     <>
       {isHologramOpen ? (
@@ -254,7 +265,10 @@ export const Chat = () => {
                   color={textColor}
                   fontSize="18px"
                   fontWeight={"700"}
-                  onClick={() => setHologramOpen(true)}
+                  onClick={() => {
+                    setHologramOpen(true);
+                    setModel("Dizzy");
+                  }}
                 >
                   <Flex
                     borderRadius="full"
@@ -297,6 +311,13 @@ export const Chat = () => {
               justifySelf={"flex-end"}
               _disabled={loading}
             >
+              <div
+                cursor="pointer"
+                title={ggmlModel}
+                style={{ padding: "15px" }}
+              >
+                <InfoIcon height={20} />
+              </div>
               <Input
                 disabled={loading}
                 minH="54px"

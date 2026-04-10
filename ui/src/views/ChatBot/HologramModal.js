@@ -367,7 +367,6 @@ const HologramModal = ({ isOpen, onClose }) => {
   };
   const closeModal = () => {
     {
-      onClose();
       recognitionRef.current?.stop();
       if (
         audioContextRef.current &&
@@ -376,6 +375,7 @@ const HologramModal = ({ isOpen, onClose }) => {
         audioContextRef.current.suspend();
       }
       setIsAudioActive(false);
+      onClose();
     }
   };
   return (

@@ -2,12 +2,13 @@ import {
   ASSISTANT,
   SYSTEM,
   LLAMA_RESPONSE_TERMINATOR_CONTENT,
+  LLAMA_SERVER_HOST_PORT,
 } from "../../variables/const";
 
 // Reference - https://github.com/ggerganov/llama.cpp/blob/master/examples/server/public/completion.js
 const paramDefaults = {
   stream: true,
-  n_predict: 400,
+  n_predict: 1000,
   temperature: 0.7,
   repeat_last_n: 256,
   repeat_penalty: 1.18,
@@ -26,7 +27,7 @@ const paramDefaults = {
   image_data: [],
   cache_prompt: false, // Stop caching of prompt to ensure faster response and less memory usage.
   slot_id: 0,
-  max_tokens: 100, // This is to limit the tokens generated from LLAMA to ensure less memory footprint.
+  max_tokens: 1000, // This is to limit the tokens generated from LLAMA to ensure less memory footprint.
 };
 
 // Logic to cut short the context window - basically, only work on the latest prompt OR summarize. <IMPORTANT>
@@ -96,16 +97,19 @@ export async function* llama(prompt, backstory, params = {}, config = {}) {
     ...params,
     messages: finalPrompt,
   };
-  const response = await fetch("http://127.0.0.1:6792/v1/chat/completions", {
-    method: "POST",
-    body: JSON.stringify(completionParams),
-    headers: {
-      Connection: "keep-alive",
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-    },
-    signal: controller.signal,
-  });
+  const response = await fetch(
+    LLAMA_SERVER_HOST_PORT + "/v1/chat/completions",
+    {
+      method: "POST",
+      body: JSON.stringify(completionParams),
+      headers: {
+        Connection: "keep-alive",
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      },
+      signal: controller.signal,
+    }
+  );
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();

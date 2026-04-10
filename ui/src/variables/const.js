@@ -36,3 +36,4 @@ export const AI = "ai";
 export const ASSISTANT = "assistant";
 export const SYSTEM = "system";
 export const LLAMA_RESPONSE_TERMINATOR_CONTENT = "data: [DONE]";
+export const LLAMA_SERVER_HOST_PORT = "http://127.0.0.1:6792";
