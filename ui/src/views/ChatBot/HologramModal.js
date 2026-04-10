@@ -129,7 +129,11 @@ const HologramModal = ({ isOpen, onClose }) => {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    const frustumHeight = 20;
+    // --- PADDING LOGIC ---
+    const BASE_FRUSTUM = 20;
+    const PADDING_FACTOR = 0.8; // 10% padding from edges
+    const frustumHeight = BASE_FRUSTUM / PADDING_FACTOR;
+
     const aspect = window.innerWidth / window.innerHeight;
     const camera = new THREE.OrthographicCamera(
       (-frustumHeight * aspect) / 2,
@@ -275,18 +279,31 @@ const HologramModal = ({ isOpen, onClose }) => {
     const [bottom, top, left, right] = emitters;
 
     const updateLayout = () => {
-      const asp = window.innerWidth / window.innerHeight;
-      camera.left = (-frustumHeight * asp) / 2;
-      camera.right = (frustumHeight * asp) / 2;
-      camera.top = frustumHeight / 2;
-      camera.bottom = -frustumHeight / 2;
+      const w = window.innerWidth,
+        h = window.innerHeight;
+      renderer.setSize(w, h);
+      const asp = w / h;
+
+      // Calculate the 'viewable' frustum vs the 'content' frustum
+      const curFrustum = BASE_FRUSTUM / PADDING_FACTOR;
+      camera.left = (-curFrustum * asp) / 2;
+      camera.right = (curFrustum * asp) / 2;
+      camera.top = curFrustum / 2;
+      camera.bottom = -curFrustum / 2;
       camera.updateProjectionMatrix();
-      bottom.group.position.set(0, -frustumHeight / 2 + 2, 0);
-      top.group.position.set(0, frustumHeight / 2 - 2, 0);
+
+      // Safe boundaries for content
+      const halfW = (BASE_FRUSTUM * asp) / 2;
+      const halfH = BASE_FRUSTUM / 2;
+
+      bottom.group.position.set(0, -halfH + 2, 0);
+      top.group.position.set(0, halfH - 2, 0);
       top.group.rotation.set(0, 0, Math.PI);
-      left.group.position.set(camera.left + 2, 0, 0);
+
+      left.group.position.set(-halfW + 2, 0, 0);
       left.group.rotation.set(0, 0, -Math.PI / 2);
-      right.group.position.set(camera.right - 2, 0, 0);
+
+      right.group.position.set(halfW - 2, 0, 0);
       right.group.rotation.set(0, 0, Math.PI / 2);
     };
     updateLayout();
@@ -357,7 +374,7 @@ const HologramModal = ({ isOpen, onClose }) => {
         height: "100vh",
         zIndex: 9999,
         background:
-          "radial-gradient(circle at center, #2d1d82 0%, #e8b3c6 100%)",
+          "radial-gradient(circle at center, #000000 0%, #000000 100%)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -370,8 +387,6 @@ const HologramModal = ({ isOpen, onClose }) => {
           position: "absolute",
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
         }}
       />
 
@@ -409,9 +424,8 @@ const HologramModal = ({ isOpen, onClose }) => {
           zIndex: 100,
           display: "flex",
           flexDirection: "column",
-          gap: "15px",
           background: "rgba(45, 29, 130, 0.2)",
-          padding: "30px",
+          padding: "10px",
           borderRadius: "20px",
           backdropFilter: "blur(10px)",
           border: "1px solid rgba(255, 255, 255, 0.15)",
@@ -424,17 +438,12 @@ const HologramModal = ({ isOpen, onClose }) => {
             style={{
               background: currentState === state ? "#00ffff" : "transparent",
               color:
-                currentState === state ? "#2d1d82" : "rgba(255,255,255,0.7)",
+                currentState === state ? "#0f0e0f" : "rgba(255,255,255,0.7)",
               border: "none",
               padding: "10px 20px",
               borderRadius: "20px",
               cursor: "pointer",
               fontFamily: "Orbitron, sans-serif",
-              fontWeight: "bold",
-              boxShadow:
-                currentState === state
-                  ? "0 0 25px rgba(0, 255, 255, 0.5)"
-                  : "none",
             }}
           >
             {state}
@@ -448,7 +457,6 @@ const HologramModal = ({ isOpen, onClose }) => {
             background: "rgba(255,0,0,0.2)",
             color: "white",
             border: "1px solid red",
-            padding: "10px",
             borderRadius: "20px",
             cursor: "pointer",
           }}
