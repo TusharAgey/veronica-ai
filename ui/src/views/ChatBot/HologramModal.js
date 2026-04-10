@@ -23,8 +23,8 @@ const HologramModal = ({ isOpen, onClose }) => {
   // --- 1. SPEECH RECOGNITION SETUP ---
   useEffect(() => {
     // Browser compatibility check
-    const SpeechRecognition = window.SpeechRecognition;
-    console.log(SpeechRecognition);
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = true; // Keep listening even after a pause
@@ -60,7 +60,7 @@ const HologramModal = ({ isOpen, onClose }) => {
 
       // Auto-restart if it stops (unless we closed the modal)
       recognition.onend = () => {
-        if (mountRef.current && isAudioActive) {
+        if (mountRef.current && isAudioActive && isOpen) {
           try {
             recognition.start();
           } catch (e) {
@@ -78,7 +78,9 @@ const HologramModal = ({ isOpen, onClose }) => {
         }
       }
     } else {
-      console.log("hehe you don't have any voice recognication unit");
+      console.log(
+        "alright, seems like you don't have any voice recognication unit enabled browser"
+      );
     }
 
     return () => {
@@ -363,7 +365,19 @@ const HologramModal = ({ isOpen, onClose }) => {
     // If manually clicking listening, ensure audio/recog is ready
     if (newState === "LISTENING" && !isAudioActive) initSystem();
   };
-
+  const closeModal = () => {
+    {
+      onClose();
+      recognitionRef.current?.stop();
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
+        audioContextRef.current.suspend();
+      }
+      setIsAudioActive(false);
+    }
+  };
   return (
     <div
       style={{
@@ -451,7 +465,7 @@ const HologramModal = ({ isOpen, onClose }) => {
         ))}
 
         <button
-          onClick={onClose}
+          onClick={closeModal}
           style={{
             marginTop: "20px",
             background: "rgba(255,0,0,0.2)",
