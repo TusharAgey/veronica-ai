@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 const HologramModal = ({ isOpen, onClose }) => {
   const mountRef = useRef(null);
   const [isAudioActive, setIsAudioActive] = useState(false);
   const [currentState, setCurrentState] = useState("IDLE");
+  const availableStates = useMemo(() => ["IDLE", "LISTENING", "SPEAKING"], []);
 
   // State Ref for Animation Loop
   const stateRef = useRef("IDLE");
@@ -373,6 +374,7 @@ const HologramModal = ({ isOpen, onClose }) => {
         audioContextRef.current.state !== "closed"
       ) {
         audioContextRef.current.suspend();
+        audioContextRef.current.close();
       }
       setIsAudioActive(false);
       onClose();
@@ -445,7 +447,7 @@ const HologramModal = ({ isOpen, onClose }) => {
           border: "1px solid rgba(255, 255, 255, 0.15)",
         }}
       >
-        {["IDLE", "LISTENING", "SPEAKING"].map((state) => (
+        {availableStates.map((state) => (
           <button
             key={state}
             onClick={() => handleStateChange(state)}

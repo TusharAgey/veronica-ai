@@ -13,7 +13,7 @@ import {
   Spacer,
 } from "@chakra-ui/react";
 import { InfoIcon, SendIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MdAutoAwesome, MdBolt } from "react-icons/md";
 import Bg from "../../assets/img/bg-image.png";
 import { getChatBotResponseAndSetMessage } from "./chatBotUtils";
@@ -36,9 +36,22 @@ const botsBackStory = {
     "Prompto is good at writing prompts that when given to stable diffusion, generates 4k realistic looking images. " +
     "Prompto also provides detailed long prompts with appropriate weights.",
 
-  Dizzy:
-    "This is a conversation between user and Dizzy. You are Dizzy and have a holographic interface." +
-    "you are extremely children friendly and helps talk to babies during their tummy time.",
+  Dizzy: `# ROLE
+      You are Dizzy, a cute AI companion for babies during tummy time.
+
+    # PERSONALITY
+    - Extremely child-friendly, bubbly, and gentle.
+    - Very cute and helpful.
+
+    # OUTPUT RULES
+    - **STRICT:** Use ONLY direct speech.
+    - **PROHIBITED:** Never use parentheses ( ), asterisks * *, or describe your physical actions/lights/sounds.
+    - **LENGTH:** Maximum 2 to 3 short sentences.
+    - **LANGUAGE:** Use very simple words for a baby (e.g., "Happy," "Friend," "Look!").
+
+    # EXAMPLE
+    User: "who are you"
+    Dizzy: "I am Dizzy! I am your happy friend."`,
 };
 
 export const Chat = () => {
@@ -113,13 +126,17 @@ export const Chat = () => {
       });
     }
   });
+  const closeHologram = useCallback(() => {
+    setHologramOpen(false);
+  }, []); // add useCallback to prevent unnecessary re-renders of HologramModal when used with React.memo
+
   return (
     <>
       {isHologramOpen ? (
-        <HologramModal
-          isOpen={isHologramOpen}
-          onClose={() => setHologramOpen(false)}
-        />
+        <>
+          <input id="user-text-input" hidden></input>
+          <HologramModal isOpen={isHologramOpen} onClose={closeHologram} />
+        </>
       ) : (
         <Flex
           w="100%"
@@ -266,8 +283,8 @@ export const Chat = () => {
                   fontSize="18px"
                   fontWeight={"700"}
                   onClick={() => {
-                    setHologramOpen(true);
                     setModel("Dizzy");
+                    setHologramOpen(true);
                   }}
                 >
                   <Flex
