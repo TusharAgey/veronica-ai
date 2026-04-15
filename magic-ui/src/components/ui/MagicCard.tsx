@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "../../utilities/utils";
 
 export function MagicCard({
   children,

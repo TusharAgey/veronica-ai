@@ -1,0 +1,32 @@
+import axios from "axios";
+import { LLAMA_SERVER_HOST_PORT } from "./const";
+export const getAccounts = () => {
+  return axios.get("http://localhost:8080/password-manager/user/accounts");
+};
+
+export const addAccount = (request: any) => {
+  return axios.post("http://localhost:8080/password-manager/new", request);
+};
+
+export const loadAccountDetails = (accountId: string) => {
+  return axios.get("http://localhost:8080/password-manager/user/" + accountId);
+};
+
+export const laodRandomFile = () => {
+  const files = ["treeTraversal.java"];
+  const randomFile = files[Math.floor(Math.random() * files.length)];
+
+  return axios.get("http://localhost:8080/" + randomFile);
+};
+
+export const loadLlamaModelDetails = () => {
+  return axios.get(LLAMA_SERVER_HOST_PORT + "/models");
+};
+
+// export const getAllOldAccounts = () => {
+//   return axios.get("http://localhost:5000/get_all_accounts");
+// };
+
+// export const getAccountDetails_old = (acc) => {
+//   return axios.get("http://localhost:5000/get_account_details?useracc=" + acc);
+// };

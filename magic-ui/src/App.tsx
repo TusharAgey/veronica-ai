@@ -37,7 +37,7 @@ export default function App() {
         </>
       ) : (
         <div className="fixed inset-0 w-full h-full overflow-hidden text-slate-50 bg-black">
-          <SpatialEnvironment theme={theme} />
+          <SpatialEnvironment />
 
           {/* UI LAYER */}
           <div className="relative z-10 flex w-full h-full p-6 md:p-10 gap-8">
