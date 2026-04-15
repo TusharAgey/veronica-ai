@@ -1,5 +1,5 @@
 import { User, Settings as SettingsIcon } from "lucide-react";
-
+import { getGreetingByTime } from "../../utilities/utils";
 interface TopHeaderProps {
   activeTab: string;
   theme: "dark" | "midnight";
@@ -19,7 +19,13 @@ export function TopHeader({
       : "bg-white/10 border border-white/10";
 
   return (
-    <header className="h-16 flex items-center justify-between mb-6 shrink-0 z-20">
+    <header
+      className={
+        activeTab === "chatbot"
+          ? "h-16 flex items-center justify-between shrink-0 z-20"
+          : "h-16 flex items-center justify-between mb-6 shrink-0 z-20"
+      }
+    >
       <h1 className="text-2xl font-semibold capitalize tracking-wide text-white">
         {title}
       </h1>
@@ -29,7 +35,7 @@ export function TopHeader({
       >
         <User size={16} className="text-white/50" />
         <span className="text-sm font-medium pr-2 border-r border-white/10 text-white/80">
-          Good Afternoon!
+          Good {getGreetingByTime()}!
         </span>
         <button
           onClick={onOpenSettings}

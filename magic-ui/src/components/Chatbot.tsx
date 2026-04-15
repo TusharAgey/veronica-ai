@@ -5,7 +5,7 @@ import { BotSelector } from "./chatbot/BotSelector";
 import { ZapBackdrop } from "./chatbot/Zap";
 import { ChatInput } from "./chatbot/ChatInput";
 
-const AVAILABLE_BOTS = ["Code Bot", "Space Pirate", "Prompto", "Hologram"];
+const AVAILABLE_BOTS = ["Code Bot", "Space Pirate", "Prompto"];
 
 export default function Chatbot() {
   const [activeBot, setActiveBot] = useState(AVAILABLE_BOTS[0]);
