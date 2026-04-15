@@ -1,3 +1,5 @@
+@import "@fontsource-variable/geist";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +7,10 @@
 @layer base {
   :root {
     --background: 240 10% 4%;
-    /* ... your other variables ... */
+    --foreground: 0 0% 98%;
+    --border: 240 3.7% 25%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
   }
   * {
     @apply border-border;

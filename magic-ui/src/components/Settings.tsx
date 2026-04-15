@@ -1,5 +1,4 @@
 import { X, Moon, Sparkles } from "lucide-react";
-import { useState } from "react";
 
 interface SettingsProps {
   isOpen: boolean;
@@ -19,8 +18,6 @@ export default function Settings({
   blurValue,
   setBlurValue,
 }: SettingsProps) {
-  const [navVisible, setNavVisible] = useState(true);
-
   if (!isOpen) return null;
 
   return (
@@ -41,21 +38,6 @@ export default function Settings({
         </div>
 
         <div className="space-y-6">
-          <div className="flex justify-between items-center bg-black/40 p-4 rounded-2xl border border-white/5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
-            <span className="text-sm font-medium text-white/80">
-              Navbar Visible
-            </span>
-            <button
-              onClick={() => setNavVisible(!navVisible)}
-              className={`w-12 h-6 rounded-full transition-colors relative flex items-center px-1 ${navVisible ? "bg-indigo-500" : "bg-white/10"}`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white transition-transform ${navVisible ? "translate-x-6" : "translate-x-0"}`}
-              />
-            </button>
-          </div>
-
-          {/* Spatial Theme Toggle */}
           <div className="flex flex-col gap-3 bg-black/40 p-4 rounded-2xl border border-white/5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
             <span className="text-sm font-medium text-white/80 mb-1">
               Spatial Environment
@@ -79,7 +61,6 @@ export default function Settings({
             </div>
           </div>
 
-          {/* --- SMOKE TRANSPARENCY SLIDER --- */}
           <div className="flex flex-col gap-3 bg-black/40 p-4 rounded-2xl border border-white/5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
             <div className="flex justify-between items-baseline mb-1">
               <span className="text-sm font-medium text-white/80">
@@ -89,13 +70,11 @@ export default function Settings({
                 {blurValue}px
               </span>
             </div>
-
-            {/* The Engraved Glass Range Slider Container */}
             <div className="relative w-full h-10 bg-black/40 shadow-[inset_0_2px_8px_rgba(0,0,0,0.8),0_1px_0_rgba(255,255,255,0.1)] border border-black/50 rounded-full px-4 flex items-center">
               <input
                 type="range"
                 min="0"
-                max="100"
+                max="64"
                 step="1"
                 value={blurValue}
                 onChange={(e) => setBlurValue(Number(e.target.value))}
