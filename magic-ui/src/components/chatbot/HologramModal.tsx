@@ -1,28 +1,62 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import * as THREE from "three";
 
-const HologramModal = ({ isOpen, onClose }) => {
-  const mountRef = useRef(null);
-  const [isAudioActive, setIsAudioActive] = useState(false);
-  const [currentState, setCurrentState] = useState("IDLE");
-  const availableStates = useMemo(() => ["IDLE", "LISTENING", "SPEAKING"], []);
+// --- Types for Web Speech API ---
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface IWindow extends Window {
+  SpeechRecognition?: any;
+  webkitSpeechRecognition?: any;
+  webkitAudioContext?: typeof AudioContext;
+}
+
+declare const window: IWindow;
+
+// --- Component Props ---
+interface HologramModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+type AppState = "IDLE" | "LISTENING" | "SPEAKING";
+
+const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
+  const mountRef = useRef<HTMLDivElement>(null);
+  const [isAudioActive, setIsAudioActive] = useState<boolean>(false);
+  const [currentState, setCurrentState] = useState<AppState>("IDLE");
+  const availableStates = useMemo<AppState[]>(
+    () => ["IDLE", "LISTENING", "SPEAKING"],
+    [],
+  );
 
   // State Ref for Animation Loop
-  const stateRef = useRef("IDLE");
+  const stateRef = useRef<AppState>("IDLE");
 
   // Refs for Three.js & Audio
-  const sceneRef = useRef(null);
-  const rendererRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const dataArrayRef = useRef(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const animationFrameRef = useRef<number>(0);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
 
   // NEW: Stream ref to properly kill the microphone track
-  const streamRef = useRef(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // Ref for Speech Recognition
-  const recognitionRef = useRef(null);
+  const recognitionRef = useRef<any>(null);
 
   // Cleanup microphone on total unmount
   useEffect(() => {
@@ -43,7 +77,7 @@ const HologramModal = ({ isOpen, onClose }) => {
       recognition.interimResults = false;
       recognition.lang = "en-US";
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const lastResultIndex = event.results.length - 1;
         const transcript = event.results[lastResultIndex][0].transcript
           .trim()
@@ -59,7 +93,7 @@ const HologramModal = ({ isOpen, onClose }) => {
         }
       };
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech Recognition Error", event.error);
       };
 
@@ -91,8 +125,10 @@ const HologramModal = ({ isOpen, onClose }) => {
     if (isAudioActive) return;
 
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const ctx = new AudioContext();
+      // @ts-ignore
+      // prettier-ignore
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioContextClass();
       audioContextRef.current = ctx;
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -158,25 +194,38 @@ const HologramModal = ({ isOpen, onClose }) => {
       new THREE.Color(0.6, 0.0, 1.0),
     ];
 
-    const createOrbTexture = () => {
+    const createOrbTexture = (): THREE.CanvasTexture => {
       const canvas = document.createElement("canvas");
       canvas.width = 128;
       canvas.height = 128;
       const ctx = canvas.getContext("2d");
-      const gradient = ctx.createRadialGradient(64, 64, 4, 64, 64, 64);
-      gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
-      gradient.addColorStop(0.3, "rgba(0, 255, 255, 0.6)");
-      gradient.addColorStop(0.7, "rgba(120, 50, 255, 0.2)");
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 128, 128);
+      if (ctx) {
+        const gradient = ctx.createRadialGradient(64, 64, 4, 64, 64, 64);
+        gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
+        gradient.addColorStop(0.3, "rgba(0, 255, 255, 0.6)");
+        gradient.addColorStop(0.7, "rgba(120, 50, 255, 0.2)");
+        gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 128, 128);
+      }
       return new THREE.CanvasTexture(canvas);
     };
 
     const orbMap = createOrbTexture();
-    const attenuation = (x) => Math.pow(4 * x * (1 - x), 2.5);
+    const attenuation = (x: number) => Math.pow(4 * x * (1 - x), 2.5);
 
     class HologramEmitter {
+      group: THREE.Group;
+      orb: THREE.Sprite;
+      lines: Array<{
+        mesh: THREE.Line;
+        baseColor: THREE.Color;
+        speed: number;
+        noiseOffset: number;
+        phase: number;
+      }>;
+      waveSpread: number;
+
       constructor() {
         this.group = new THREE.Group();
         const orbMat = new THREE.SpriteMaterial({
@@ -237,8 +286,8 @@ const HologramModal = ({ isOpen, onClose }) => {
           });
         }
       }
-      update(vol, state) {
-        let speedMult, freqMult;
+      update(vol: number, state: AppState) {
+        let speedMult: number, freqMult: number;
         if (state === "LISTENING") {
           freqMult = 0.5;
           speedMult = 0.8;
@@ -256,8 +305,8 @@ const HologramModal = ({ isOpen, onClose }) => {
 
         this.lines.forEach((l) => {
           l.phase += l.speed * speedMult;
-          const pos = l.mesh.geometry.attributes.position.array;
-          const cols = l.mesh.geometry.attributes.color.array;
+          const pos = l.mesh.geometry.attributes.position.array as Float32Array;
+          const cols = l.mesh.geometry.attributes.color.array as Float32Array;
           for (let j = 0; j < SEGMENTS; j++) {
             const xRel = j / (SEGMENTS - 1);
             const xPos = pos[j * 3];
@@ -321,6 +370,7 @@ const HologramModal = ({ isOpen, onClose }) => {
 
       let micVol = 0;
       if (analyserRef.current && dataArrayRef.current) {
+        //@ts-ignore
         analyserRef.current.getByteFrequencyData(dataArrayRef.current);
         let sum = 0;
         for (let i = 0; i < dataArrayRef.current.length / 3; i++)
@@ -366,7 +416,7 @@ const HologramModal = ({ isOpen, onClose }) => {
 
   // OPTIMIZATION 1: Stabilize the state change function so it doesn't recreate on every render
   const handleStateChange = useCallback(
-    (newState) => {
+    (newState: AppState) => {
       setCurrentState(newState);
       stateRef.current = newState;
       if (newState === "LISTENING" && !isAudioActive) initSystem();
