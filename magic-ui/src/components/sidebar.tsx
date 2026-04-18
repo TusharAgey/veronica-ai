@@ -7,10 +7,10 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { SidebarGlassPanel } from "./sidebar/SidebarGlassPanel";
-import { SidebarBrand } from "./sidebar/SidebarBrand";
-import { SidebarNavItem } from "./sidebar/SidebarNavItem";
-import { SidebarToggle } from "./sidebar/SidebarToggle";
+import { SidebarGlassPanel } from "./side-bar/SidebarGlassPanel";
+import { SidebarBrand } from "./side-bar/SidebarBrand";
+import { SidebarNavItem } from "./side-bar/SidebarNavItem";
+import { SidebarToggle } from "./side-bar/SidebarToggle";
 
 interface SidebarProps {
   activeTab: string;
