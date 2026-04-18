@@ -1,7 +1,10 @@
 import { LayoutDashboard, Lock, Zap } from "lucide-react";
 import { MagicCard } from "./ui/MagicCard";
+import { useGetAccountsQuery } from "../services/api";
 
 export default function Dashboard() {
+  const { data: accounts = [] } = useGetAccountsQuery();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-2">
       {/* AI Bots List */}
@@ -43,7 +46,7 @@ export default function Dashboard() {
           <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mb-4 shadow-[inset_0_2px_10px_rgba(16,185,129,0.2)]">
             <Lock size={28} className="text-emerald-400" />
           </div>
-          <h3 className="text-4xl font-bold text-white">60</h3>
+          <h3 className="text-4xl font-bold text-white">{accounts.length}</h3>
           <p className="text-white/50 text-sm">Saved Passwords</p>
         </MagicCard>
       </div>

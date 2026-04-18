@@ -18,3 +18,19 @@ class UserPassword(Base):
 
     def __repr__(self):
        return f"UserPassword(id={self.id!r}, email={self.email}, account_name={self.account_name!r}, account_description={self.account_description!r}, username={self.username!r},password={self.password!r},creation_date={self.creation_date!r})"
+
+###
+## ORM definition of the table to store user account credentials.
+###
+class UserPasswordV2(Base):
+    __tablename__ = constants.PASSWORD_TABLE_V2
+
+    account_name =           Column(String(256), primary_key=True)
+    account_description =    Column(String(1024))
+    username =               Column(String(64))
+    password =               Column(String(512))
+    email =                  Column(String(64))
+    creation_date =          Column(DateTime)
+
+    def __repr__(self):
+       return f"UserPassword(id={self.id!r}, email={self.email}, account_name={self.account_name!r}, account_description={self.account_description!r}, username={self.username!r},password={self.password!r},creation_date={self.creation_date!r})"
