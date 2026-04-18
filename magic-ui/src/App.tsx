@@ -19,7 +19,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState<"dark" | "midnight">("dark");
-  const [blurValue, setBlurValue] = useState(24);
+  const [blurValue, setBlurValue] = useState(5);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");

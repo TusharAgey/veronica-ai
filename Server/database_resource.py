@@ -27,6 +27,22 @@ def getPasswordTable(metadata_obj):
     return USER_PASSWORDS_TABLE
 
 ###
+## Utility function to create new password table.
+###
+def getPasswordTableV2(metadata_obj):
+    USER_PASSWORDS_TABLE = Table(
+        constants.PASSWORD_TABLE_V2,
+        metadata_obj,
+        Column('ACCOUNT_NAME', String(256), primary_key=True),
+        Column('ACCOUNT_DESCRIPTION', String(1024)),
+        Column('USERNAME', String(64)),
+        Column('PASSWORD', String(512)),
+        Column('EMAIL', String(64)),
+        Column('CREATION_DATE', DateTime)
+    );
+    return USER_PASSWORDS_TABLE
+
+###
 ## Utility function to get the SqlLite database connection.
 ###
 def getDatabaseEngine():
@@ -41,7 +57,8 @@ def createDatabase(logger):
         logger.info("Database file already exists. Starting Server.")
         return constants.ALREADY_EXISTS
     try:
-        getPasswordTable(metadata_obj);
+        getPasswordTable(metadata_obj)
+        getPasswordTableV2(metadata_obj)
         engine = getDatabaseEngine()
         metadata_obj.create_all(engine)
         logger.info("Database initialized!")

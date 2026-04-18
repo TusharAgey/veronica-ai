@@ -1,8 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import CryptoJS from "crypto-js";
-import { pwdManagerFields } from "./const";
-import { addAccount, laodRandomFile } from "./apiCalls";
+import { laodRandomFile } from "./apiCalls";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -44,18 +42,15 @@ export const handleTextAreaKeyPress = (
   e.preventDefault();
 };
 
-export const handleAddNewDiaryEntry = (
+export const handleAddNewDiaryEntry = async (
   inputText: string,
   setDownloadLinkVisible: Function,
 ) => {
   const key = (
     document.getElementById("pwd-input-session-password") as HTMLInputElement
   ).value;
-  const encryptionRequestBody = {
-    "pwd-input-session-password": key,
-    "pwd-input-password": inputText,
-  };
-  const encryptedData = encryptPassword256Bit(encryptionRequestBody);
+
+  const encryptedData = await encryptModern(inputText, key);
 
   const textFileAsBlob = new Blob([encryptedData], { type: "text/plain" });
 
@@ -72,62 +67,146 @@ export const handleBrowseDiary = () => {
   return true;
 };
 
-export const encryptPassword256Bit = (requestBody: any): string => {
-  const key = requestBody["pwd-input-session-password"];
-  return CryptoJS.AES.encrypt(
-    key,
-    requestBody["pwd-input-password"],
-  ).toString();
-};
+const dec = new TextDecoder();
+const enc = new TextEncoder();
 
-export const decryptPassword256Bit = (
-  ciphertext: string,
-  key: string,
-): string => {
+function fromBase64(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+async function deriveKey(
+  password: string,
+  salt: Uint8Array,
+): Promise<CryptoKey> {
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveKey"],
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      // @ts-ignore
+      salt,
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"],
+  );
+}
+
+export async function decryptModern(
+  payload: string,
+  password: string,
+): Promise<string> {
   try {
-    const bytes = CryptoJS.AES.decrypt(ciphertext, key);
-    const originalText = bytes.toString(CryptoJS.enc.Utf8);
+    const data: Uint8Array = fromBase64(payload);
 
-    // If originalText is empty, decryption failed (wrong key)
-    if (!originalText) throw new Error("Invalid Key");
+    const salt: Uint8Array = data.slice(0, 16);
+    const iv: Uint8Array = data.slice(16, 28);
+    const ciphertext: Uint8Array = data.slice(28);
 
-    return originalText;
+    const key: CryptoKey = await deriveKey(password, salt);
+
+    const decrypted: ArrayBuffer = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        // @ts-ignore
+        iv,
+      },
+      key,
+      ciphertext,
+    );
+
+    return dec.decode(decrypted);
   } catch (err) {
-    console.error("Decryption error:", err);
+    console.error("Decryption failed", err);
     return "ERROR";
   }
-};
+}
 
-export const validateForm = (formData: any) => {
-  return Object.values(formData).reduce((acc, elem) => acc && elem, true);
-};
+function toBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
 
-export const handleAddNewAccount = () => {
-  const requestBody = pwdManagerFields.reduce((acc, elem) => {
-    return {
-      ...acc,
-      ["pwd-input-" + elem.fieldIdentifier]: (
-        document.getElementById(
-          "pwd-input-" + elem.fieldIdentifier,
-        ) as HTMLInputElement
-      ).value,
-    };
-  }, {});
-  //@ts-ignore
-  requestBody["pwd-input-password"] = encryptPassword256Bit(requestBody);
-  //@ts-ignore
-  requestBody["pwd-input-session-password"] = "none";
-  // Insert into the DB!
-  addAccount(requestBody);
-  // Clear the input fields.
-  pwdManagerFields.forEach(
-    (elem) =>
-      ((
-        document.getElementById(
-          "pwd-input-" + elem.fieldIdentifier,
-        ) as HTMLInputElement
-      ).value = ""),
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+}
+
+export async function encryptModern(
+  plaintext: string,
+  password: string,
+): Promise<string> {
+  if (typeof plaintext !== "string") {
+    throw new Error("encryptModern expects string plaintext");
+  }
+
+  const salt: Uint8Array = crypto.getRandomValues(new Uint8Array(16));
+  const iv: Uint8Array = crypto.getRandomValues(new Uint8Array(12));
+
+  const key: CryptoKey = await deriveKey(password, salt);
+
+  const encrypted: ArrayBuffer = await crypto.subtle.encrypt(
+    {
+      name: "AES-GCM",
+      // @ts-ignore
+      iv,
+    },
+    key,
+    enc.encode(plaintext),
   );
+
+  const cipherBytes = new Uint8Array(encrypted);
+
+  // pack: [salt | iv | ciphertext]
+  const combined = new Uint8Array(salt.length + iv.length + cipherBytes.length);
+
+  combined.set(salt, 0);
+  combined.set(iv, salt.length);
+  combined.set(cipherBytes, salt.length + iv.length);
+
+  return toBase64(combined);
+}
+
+export const handleAddNewAccount = async (createNewAccount: Function) => {
+  const requestBody = {
+    "pwd-input-account-name": (
+      document.getElementById("account-name") as HTMLInputElement
+    ).value as string,
+    "pwd-input-user-name": (
+      document.getElementById("user-name") as HTMLInputElement
+    ).value as string,
+    "pwd-input-email-id": (
+      document.getElementById("email-id") as HTMLInputElement
+    ).value as string,
+    "pwd-input-account-description": (
+      document.getElementById("account-description") as HTMLInputElement
+    ).value as string,
+    "pwd-input-password": (await encryptModern(
+      (document.getElementById("password") as HTMLInputElement).value,
+      (document.getElementById("session-password") as HTMLInputElement).value,
+    )) as string, //Strictly kept at the end to ensure that all fields are accurately captured given the form gets cleared after this call and we wait for encryption.
+    // If anything is read from the form after this line, it will be blank given the form gets cleared!
+  };
+
+  await createNewAccount(requestBody).unwrap();
 };
 
 export const readText = (
@@ -139,6 +218,6 @@ export const readText = (
   ).value;
   const file = event.target.files?.item(0);
   file?.text().then((response: any) => {
-    setInputText(decryptPassword256Bit(response, key));
+    setInputText(decryptModern(response, key));
   });
 };
