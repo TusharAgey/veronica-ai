@@ -29,10 +29,10 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci ./magic-ui
 
       - name: Build app
-        run: npm run build
+        run: npm run build ./magic-ui
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -40,7 +40,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./magic-ui/dist
 
   deploy:
     environment:
