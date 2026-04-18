@@ -18,6 +18,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./magic-ui # Change this to your subfolder path
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,13 +29,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: "npm"
+          cache-dependency-path: "./magic-ui/package-lock.json"
 
       - name: Install dependencies
-        run: npm ci ./magic-ui
+        run: npm ci
 
       - name: Build app
-        run: npm run build ./magic-ui
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
