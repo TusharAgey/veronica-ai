@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Views & Modals
-import Sidebar from "./components/Sidebar";
+import Sidebar from "./components/SideMenuBar";
 import Settings from "./components/Settings";
 import Dashboard from "./components/Dashboard";
 import PasswordManager from "./components/PasswordManager";
