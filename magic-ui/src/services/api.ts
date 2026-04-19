@@ -1,5 +1,8 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { PYTHON_SERVER_HOST_PORT } from "../utilities/const";
+import {
+  LLAMA_SERVER_HOST_PORT,
+  PYTHON_SERVER_HOST_PORT,
+} from "../utilities/const";
 import type { AccountDetails, AccountDetailsRequestPayload } from "./types";
 
 export const api = createApi({
@@ -37,8 +40,26 @@ export const api = createApi({
   }),
 });
 
+export const llama = createApi({
+  reducerPath: "llama",
+  baseQuery: fetchBaseQuery({
+    baseUrl: LLAMA_SERVER_HOST_PORT,
+  }),
+
+  endpoints: (builder) => ({
+    // 1. Get active LLM modal name
+    getActiveLLMModel: builder.query<void, void>({
+      query: () => ({
+        url: "/models",
+      }),
+    }),
+  }),
+});
+
 export const {
   useGetAccountsQuery,
   useGetAccountDetailsQuery,
   useCreateNewAccountMutation,
 } = api;
+
+export const { useGetActiveLLMModelQuery } = llama;

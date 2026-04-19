@@ -1,16 +1,18 @@
-import { Search, Send } from "lucide-react";
+import { Send, InfoIcon } from "lucide-react";
+import { useGetActiveLLMModelQuery } from "../../services/api";
 
 interface ChatInputProps {
   activeBot: string;
 }
 
 export function ChatInput({ activeBot }: ChatInputProps) {
+  const { data: activeLLMModel } = useGetActiveLLMModelQuery();
   return (
-    <div className="mt-auto relative z-10 pb-4">
+    <div className="mt-auto relative z-10">
       <div className="flex items-center p-2 gap-2 rounded-full backdrop-blur-3xl saturate-[180%] bg-white/[0.04] border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.15)]">
-        <button className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white transition-colors">
-          <Search size={20} />
-        </button>
+        <div title={activeLLMModel ?? "not-loaded"} style={{ padding: "15px" }}>
+          <InfoIcon height={20} />
+        </div>
 
         <input
           type="text"

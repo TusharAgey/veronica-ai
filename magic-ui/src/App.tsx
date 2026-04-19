@@ -17,7 +17,7 @@ import { TopHeader } from "./components/layout/TopHeader";
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [theme, setTheme] = useState<"dark" | "midnight">("dark");
   const [blurValue, setBlurValue] = useState(5);
 
@@ -66,7 +66,7 @@ export default function App() {
               />
 
               {/* DYNAMIC VIEW ROUTER */}
-              <div className="flex-1 overflow-y-auto pb-4 pr-2 z-10">
+              <div className="flex-1 overflow-y-auto pr-2 z-10">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
