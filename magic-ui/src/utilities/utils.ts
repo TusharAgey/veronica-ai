@@ -1,6 +1,55 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { laodRandomFile } from "./apiCalls";
+import { SYSTEM, ASSISTANT } from "./const";
+import type { ChatMessage } from "../services/types";
+
+// Logic to cut short the context window - basically, only work on the latest prompt OR summarize. <IMPORTANT>
+export function optimizePayload(messages: ChatMessage[]): ChatMessage[] {
+  const MAX_HISTORY = 10; // To only keep last 10 messages in the prompt to ensure less memory footprint. This helps prune the context if the available memory is less.
+  const MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD = 150; // To only keep first 150 characters of the assistant response in subsequent prompts to reduce prompt size.
+  const compress = (text: string): string =>
+    text
+      .toLowerCase()
+      .replace(/[`]/g, "")
+      .replace(/[^\w\s.:/()-]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const shortenAssistant = (text: string): string => {
+    const shortenedAssistantResponse = text.split("\n")[0].split(/[.,:\-]+/)[0];
+
+    return shortenedAssistantResponse.length >
+      MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD
+      ? shortenedAssistantResponse.substring(
+          0,
+          MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD,
+        )
+      : shortenedAssistantResponse; // First fragment or only first 150 charaters
+  };
+
+  const nonSystem = messages.filter((m) => m.role !== SYSTEM);
+
+  // keep last few messages only
+  const recent = nonSystem.slice(-MAX_HISTORY);
+
+  const optimized: ChatMessage[] = [];
+
+  for (const msg of recent) {
+    let content = compress(msg.content);
+
+    if (msg.role === ASSISTANT) {
+      content = shortenAssistant(content);
+    }
+
+    optimized.push({
+      role: msg.role,
+      content,
+    });
+  }
+
+  return optimized;
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

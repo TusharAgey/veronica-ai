@@ -1,12 +1,17 @@
 import {
-  ASSISTANT,
   SYSTEM,
   LLAMA_RESPONSE_TERMINATOR_CONTENT,
   LLAMA_SERVER_HOST_PORT,
 } from "../../utilities/const";
+import { optimizePayload } from "../../utilities/utils";
+import type {
+  ChatMessage,
+  LlamaConfig,
+  LlamaParams,
+  LlamaChunk,
+} from "../../services/types";
 
-// Reference - https://github.com/ggerganov/llama.cpp/blob/master/examples/server/public/completion.js
-const paramDefaults = {
+const paramDefaults: LlamaParams = {
   stream: true,
   n_predict: 1000,
   temperature: 0.7,
@@ -30,61 +35,20 @@ const paramDefaults = {
   max_tokens: 1000, // This is to limit the tokens generated from LLAMA to ensure less memory footprint.
 };
 
-// Logic to cut short the context window - basically, only work on the latest prompt OR summarize. <IMPORTANT>
-function optimizePayload(messages) {
-  const MAX_HISTORY = 10; // To only keep last 10 messages in the prompt to ensure less memory footprint. This helps prune the context if the available memory is less.
-  const MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD = 150; // To only keep first 150 characters of the assistant response in subsequent prompts to reduce prompt size.
-  const compress = (text) =>
-    text
-      .toLowerCase()
-      .replace(/[`]/g, "")
-      .replace(/[^\w\s.:/()-]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const shortenAssistant = (text) => {
-    const shortenedAssitantResponse = text.split("\n")[0].split(/[.,:\-]+/)[0];
-    return shortenedAssitantResponse.length >
-      MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD
-      ? shortenedAssitantResponse.substring(
-          0,
-          MAX_ASSISTANT_RESPONSE_LENGTH_IN_PAYLOAD,
-        )
-      : shortenedAssitantResponse; // First fragment or only first 150 charaters.
-  };
-
-  const nonSystem = messages.filter((m) => m.role !== SYSTEM);
-
-  // keep last few messages only
-  const recent = nonSystem.slice(-MAX_HISTORY);
-
-  const optimized = [];
-
-  for (let msg of recent) {
-    let content = compress(msg.content);
-
-    if (msg.role === ASSISTANT) {
-      content = shortenAssistant(content);
-    }
-
-    optimized.push({
-      role: msg.role,
-      content,
-    });
-  }
-
-  return optimized;
-}
-
-// Backstory is a system prompt that sets the tone/behavior of the LLM behind the scenes. It helps the LLM assume a role and respond in a manner.
-export async function* llama(prompt, backstory, params = {}, config = {}) {
+// Backstory is a system prompt that sets tone/behavior.
+export async function* llama(
+  prompt: ChatMessage[],
+  backstory: string,
+  params: LlamaParams = {},
+  config: LlamaConfig = {},
+): AsyncGenerator<string, string, void> {
   let controller = config.controller;
 
   if (!controller) {
     controller = new AbortController();
   }
 
-  const finalPrompt = [
+  const finalPrompt: ChatMessage[] = [
     {
       role: SYSTEM,
       content: backstory,
@@ -97,8 +61,9 @@ export async function* llama(prompt, backstory, params = {}, config = {}) {
     ...params,
     messages: finalPrompt,
   };
+
   const response = await fetch(
-    LLAMA_SERVER_HOST_PORT + "/v1/chat/completions",
+    `${LLAMA_SERVER_HOST_PORT}/v1/chat/completions`,
     {
       method: "POST",
       body: JSON.stringify(completionParams),
@@ -111,6 +76,10 @@ export async function* llama(prompt, backstory, params = {}, config = {}) {
     },
   );
 
+  if (!response.body) {
+    throw new Error("Readable stream not available.");
+  }
+
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
 
@@ -118,48 +87,85 @@ export async function* llama(prompt, backstory, params = {}, config = {}) {
 
   try {
     let cont = true;
+    let serverIncompleteResponse = false;
+    let buffer = "";
 
     while (cont) {
       const result = await reader.read();
+
       if (result.done) {
+        // stream ended while leftover unparsed payload exists
+        if (buffer.trim()) {
+          serverIncompleteResponse = true;
+        }
         break;
       }
 
-      const text = decoder.decode(result.value);
+      buffer += decoder.decode(result.value, {
+        stream: true,
+      });
 
-      // Split the text into lines
-      const lines = text.split("\n");
+      const events = buffer.split("\n\n");
 
-      // Parse all sse events and add them to result
-      for (const line of lines) {
-        if (line === "") {
+      // keep unfinished trailing event
+      buffer = events.pop() ?? "";
+
+      for (const rawEvent of events) {
+        const event = rawEvent.trim();
+
+        if (!event) {
           continue;
         }
-        // since we know this is llama.cpp, let's just decode the json in data
-        if (result.value) {
-          if (line === LLAMA_RESPONSE_TERMINATOR_CONTENT) {
-            cont = false;
-            break;
-          }
-          const chunk = JSON.parse(line.replace(/^data:\s/, ""));
-          if (chunk.choices[0].delta.content != null) {
-            content += chunk.choices[0].delta.content;
-            yield chunk.choices[0].delta.content;
-          }
+
+        const dataLines = event
+          .split("\n")
+          .filter((line) => line.startsWith("data:"))
+          .map((line) => line.replace(/^data:\s*/, ""));
+
+        const data = dataLines.join("\n").trim();
+
+        if (!data) {
+          continue;
         }
-        if (result.error) {
-          result.error = JSON.parse(result.error);
-          console.error(`llama.cpp error: ${result.error.content}`);
+
+        if (
+          data === LLAMA_RESPONSE_TERMINATOR_CONTENT.replace(/^data:\s*/, "")
+        ) {
+          cont = false;
+          break;
+        }
+
+        try {
+          const chunk: LlamaChunk = JSON.parse(data);
+
+          const delta = chunk.choices?.[0]?.delta?.content;
+
+          if (delta != null) {
+            content += delta;
+            yield delta;
+          }
+        } catch {
+          // malformed complete event from server
+          serverIncompleteResponse = true;
         }
       }
     }
-  } catch (e) {
-    if (e.name !== "AbortError") {
-      console.error("llama error: ", e);
+
+    // optional final visibility
+    if (serverIncompleteResponse) {
+      console.warn("Server ended stream with incomplete response payload.");
     }
-    throw e;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw error;
+    }
+
+    console.error("llama error:", error);
+    throw error;
   } finally {
+    reader.releaseLock();
     controller.abort();
   }
+
   return content;
 }

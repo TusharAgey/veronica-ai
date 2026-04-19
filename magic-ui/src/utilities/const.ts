@@ -1,4 +1,4 @@
-export const botPersonality = {
+export const botPersonality: Record<string, string> = {
   "Code Bot":
     "This is a conversation between Tushar and code-bot, a friendly chatbot. " +
     "Code-Bot is helpful, kind, honest, good at writing software programs, " +
@@ -70,7 +70,6 @@ export const pwdManagerFields = [
 ] as const;
 
 export const USER = "user";
-export const AI = "ai";
 export const ASSISTANT = "assistant";
 export const SYSTEM = "system";
 export const LLAMA_RESPONSE_TERMINATOR_CONTENT = "data: [DONE]";

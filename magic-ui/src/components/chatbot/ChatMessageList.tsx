@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import type { ChatTurn } from "../../services/types";
 
 interface ChatProps {
-  chats: { user: string; llm: string }[];
+  chats: ChatTurn[];
 }
 
 // --- NEW: Isolated CodeBlock component to handle its own copy state ---
@@ -105,7 +106,7 @@ export function ChatMessageList({ chats }: ChatProps) {
           {/* LLM MESSAGE (Left Aligned, Dark Card) */}
           <div className="flex justify-start w-full">
             <div className="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-5 rounded-r-2xl rounded-b-2xl rounded-tl-sm shadow-xl max-w-[90%]">
-              <MessageFormatter text={chat.llm} />
+              <MessageFormatter text={chat.assistant} />
             </div>
           </div>
         </div>
