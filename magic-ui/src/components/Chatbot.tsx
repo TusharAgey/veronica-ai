@@ -63,8 +63,7 @@ export default function Chatbot() {
 
       <ChatMessageList chats={chatsSoFar} />
       {/* --- PINNED INPUT DOCK (Side-by-side layout) --- */}
-      {/* items-center (or items-end if your input is tall) aligns them vertically */}
-      <div className="mt-auto shrink-0 w-full p-4 pb-6 relative z-10 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent flex flex-row items-center gap-3">
+      <div className="mt-auto shrink-0 w-full p-4 pb-28 md:pb-6 relative z-10 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent flex flex-col md:flex-row items-end md:items-center gap-3">
         {/* BOT SELECTOR */}
         <BotSelector
           bots={AVAILABLE_BOTS}
@@ -73,9 +72,7 @@ export default function Chatbot() {
         />
 
         {/* CHAT INPUT */}
-        {/* The min-w-0 prevents the input from breaking out of the flex container, 
-            and layout tells Framer Motion to smoothly resize this when the sibling grows! */}
-        <motion.div layout className="flex-1 min-w-0">
+        <motion.div layout className="w-full md:flex-1 min-w-0">
           <ChatInput activeBot={activeBot} onSend={handleSend} />
         </motion.div>
       </div>

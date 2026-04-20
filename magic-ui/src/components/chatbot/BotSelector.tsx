@@ -57,7 +57,7 @@ export function BotSelector({
 
       {/* DROPDOWN MENU (Opens UPWARDS using 'bottom-full mb-3') */}
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-3 flex flex-col gap-1 p-2 rounded-2xl backdrop-blur-2xl bg-[#1a1a24]/95 border border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.5)] min-w-[200px] z-50">
+        <div className="absolute bottom-full right-0 md:left-0 md:right-auto mb-3 flex flex-col gap-1 p-2 rounded-2xl backdrop-blur-2xl bg-[#1a1a24]/95 border border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.5)] min-w-[200px] z-50">
           {bots.map((bot) => (
             <button
               key={bot}
