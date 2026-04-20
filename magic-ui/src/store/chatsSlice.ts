@@ -8,8 +8,6 @@ const initialState: ChatsState = {
     "Space Pirate": [],
     Dizzy: [],
   },
-
-  selectedChat: "Code Bot",
 };
 
 const chatsSlice = createSlice({
@@ -17,10 +15,6 @@ const chatsSlice = createSlice({
   initialState,
 
   reducers: {
-    setSelectedChat(state, action: PayloadAction<string>) {
-      state.selectedChat = action.payload;
-    },
-
     addUserPrompt(
       state,
       action: PayloadAction<{
@@ -62,11 +56,7 @@ const chatsSlice = createSlice({
   },
 });
 
-export const {
-  setSelectedChat,
-  addUserPrompt,
-  updateLatestLlmResponse,
-  clearChat,
-} = chatsSlice.actions;
+export const { addUserPrompt, updateLatestLlmResponse, clearChat } =
+  chatsSlice.actions;
 
 export default chatsSlice.reducer;

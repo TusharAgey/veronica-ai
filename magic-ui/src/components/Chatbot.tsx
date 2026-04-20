@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../store/store";
-import {
-  addUserPrompt,
-  setSelectedChat,
-  updateLatestLlmResponse,
-} from "../store/chatsSlice";
+import { addUserPrompt, updateLatestLlmResponse } from "../store/chatsSlice";
 import { useLazyRunLlamaQuery } from "../services/llamaApi";
 import { botPersonality } from "../utilities/const";
 // Extracted Sub-Components
@@ -17,7 +13,6 @@ const AVAILABLE_BOTS = ["Code Bot", "Space Pirate"];
 export default function Chatbot() {
   const [activeBot, setActiveBot] = useState(AVAILABLE_BOTS[0]);
   const dispatch = useAppDispatch();
-  dispatch(setSelectedChat(activeBot));
   const { sessions } = useAppSelector((state) => state.chats);
   const chatsSoFar = sessions[activeBot] || [];
   const [runLlama, result] = useLazyRunLlamaQuery();

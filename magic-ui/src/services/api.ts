@@ -3,7 +3,11 @@ import {
   LLAMA_SERVER_HOST_PORT,
   PYTHON_SERVER_HOST_PORT,
 } from "../utilities/const";
-import type { AccountDetails, AccountDetailsRequestPayload } from "./types";
+import type {
+  AccountDetails,
+  AccountDetailsRequestPayload,
+  LlamaModelResponse,
+} from "./types";
 
 export const api = createApi({
   reducerPath: "api",
@@ -48,7 +52,7 @@ export const llama = createApi({
 
   endpoints: (builder) => ({
     // 1. Get active LLM modal name
-    getActiveLLMModel: builder.query<void, void>({
+    getActiveLLMModel: builder.query<LlamaModelResponse, void>({
       query: () => ({
         url: "/models",
       }),

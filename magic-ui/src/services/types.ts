@@ -69,6 +69,12 @@ export interface LlamaChunk {
   }>;
 }
 
+export interface LlamaModelResponse {
+  models: Array<{
+    name: string;
+  }>;
+}
+
 export interface ChatTurn {
   user: string;
   assistant: string;
@@ -78,5 +84,4 @@ export type ChatSessions = Record<string, ChatTurn[]>;
 
 export interface ChatsState {
   sessions: ChatSessions;
-  selectedChat: string;
 }
