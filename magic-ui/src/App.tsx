@@ -40,7 +40,7 @@ export default function App() {
           <SpatialEnvironment />
 
           {/* UI LAYER */}
-          <div className="relative z-10 flex w-full h-full p-6 md:p-10 gap-8">
+          <div className="relative z-10 flex flex-col md:flex-row w-full h-full p-3 md:p-10 gap-4 md:gap-8 pb-28 md:pb-10">
             <Settings
               isOpen={isSettingsOpen}
               onClose={() => setIsSettingsOpen(false)}
@@ -66,7 +66,7 @@ export default function App() {
               />
 
               {/* DYNAMIC VIEW ROUTER */}
-              <div className="flex-1 overflow-y-auto pr-2 z-10">
+              <div className="flex-1 overflow-y-auto px-1 md:pr-2 z-10">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}

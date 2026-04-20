@@ -15,13 +15,11 @@ export function SidebarNavItem({
   onClick,
   isCollapsed,
 }: SidebarNavItemProps) {
-  const baseClasses =
-    "relative flex items-center transition-colors duration-300 w-full whitespace-nowrap group z-10";
-
-  // FIX 1: Shrunk from w-12 h-12 down to w-10 h-10 when collapsed so it doesn't touch the track's border
+  // THE FIX: When collapsed (mobile), strictly enforce a square w-12 h-12 so the
+  // background droplet remains a perfect circle. When expanded, let it take full width.
   const layoutClasses = isCollapsed
-    ? "justify-center w-10 h-10 mx-auto"
-    : "gap-3 px-4 py-3 h-12 text-left";
+    ? "justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full"
+    : "justify-start px-4 py-3 w-full rounded-2xl";
 
   const textClasses = isActive
     ? "text-white"
@@ -31,13 +29,13 @@ export function SidebarNavItem({
     <button
       onClick={onClick}
       title={isCollapsed ? label : ""}
-      className={`${baseClasses} ${layoutClasses} ${textClasses}`}
+      // Removed flex-1 so they don't stretch into ovals on mobile
+      className={`relative flex items-center gap-3 transition-colors group cursor-pointer shrink-0 ${layoutClasses} ${textClasses}`}
     >
       {/* THE LIQUID DROPLET */}
       {isActive && (
         <motion.div
           layoutId="active-drop"
-          // FIX 2: Restored the vibrant purple background and glow
           className={`absolute inset-0 z-[-1] bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] ${
             isCollapsed ? "rounded-full" : "rounded-2xl"
           }`}
@@ -51,7 +49,7 @@ export function SidebarNavItem({
       )}
 
       {/* ICON */}
-      <div className="shrink-0 relative z-10 transition-transform group-hover:scale-110 duration-300 flex items-center justify-center">
+      <div className="shrink-0 relative z-10 transition-transform group-hover:scale-110 duration-300 flex items-center justify-center mx-auto md:mx-0">
         {icon}
       </div>
 
@@ -62,7 +60,7 @@ export function SidebarNavItem({
             initial={{ opacity: 0, width: 0, filter: "blur(4px)" }}
             animate={{ opacity: 1, width: "auto", filter: "blur(0px)" }}
             exit={{ opacity: 0, width: 0, filter: "blur(4px)" }}
-            className="text-sm font-medium overflow-hidden relative z-10"
+            className="text-sm font-medium overflow-hidden relative z-10 whitespace-nowrap"
           >
             {label}
           </motion.span>
