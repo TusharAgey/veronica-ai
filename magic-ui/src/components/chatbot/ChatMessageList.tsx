@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Check, Copy } from "lucide-react";
 import type { ChatTurn } from "../../services/types";
 
@@ -59,6 +59,9 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
 
 // --- UPDATED: MessageFormatter now uses the CodeBlock component ---
 function MessageFormatter({ text }: { text: string }) {
+  if (text.trim() === "") {
+    return <>...</>;
+  }
   const parts = text.split("```");
 
   return (
@@ -92,9 +95,13 @@ function MessageFormatter({ text }: { text: string }) {
 }
 
 export function ChatMessageList({ chats }: ChatProps) {
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  useEffect(() => {
+    messagesEndRef.current && messagesEndRef.current.scrollIntoView();
+  });
   return (
-    <div className="flex-1 overflow-y-auto pt-20 pb-4 px-2 flex flex-col gap-8 scrollbar-hide z-10">
-      {chats.map((chat, idx) => (
+    <div className="flex-1 overflow-y-auto pt-4 pb-4 px-2 flex flex-col gap-8 scrollbar-hide z-10">
+      {[...chats].map((chat, idx) => (
         <div key={idx} className="flex flex-col gap-6 w-full">
           {/* USER MESSAGE (Right Aligned, Cyan Pill) */}
           <div className="flex justify-end w-full">
@@ -111,6 +118,7 @@ export function ChatMessageList({ chats }: ChatProps) {
           </div>
         </div>
       ))}
+      <div ref={messagesEndRef} />
     </div>
   );
 }

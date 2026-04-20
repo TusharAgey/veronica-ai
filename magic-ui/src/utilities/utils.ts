@@ -4,6 +4,21 @@ import { laodRandomFile } from "./apiCalls";
 import { SYSTEM, ASSISTANT } from "./const";
 import type { ChatMessage } from "../services/types";
 
+export function chatHistory(
+  chats: Array<{ user: string; assistant: string }>,
+): ChatMessage[] {
+  return chats.flatMap(({ user, assistant }) => [
+    {
+      role: "user",
+      content: user,
+    },
+    {
+      role: "assistant",
+      content: assistant,
+    },
+  ]);
+}
+
 // Logic to cut short the context window - basically, only work on the latest prompt OR summarize. <IMPORTANT>
 export function optimizePayload(messages: ChatMessage[]): ChatMessage[] {
   const MAX_HISTORY = 10; // To only keep last 10 messages in the prompt to ensure less memory footprint. This helps prune the context if the available memory is less.
