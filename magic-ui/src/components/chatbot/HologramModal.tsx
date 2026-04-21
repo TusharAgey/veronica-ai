@@ -462,26 +462,9 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
       )}
 
       {/* Control Panel */}
-      <div className="relative z-[100] flex flex-col bg-indigo-900/20 p-3 rounded-[20px] backdrop-blur-md border border-white/15 shadow-2xl">
-        {availableStates.map((state) => (
-          <button
-            key={state}
-            onClick={() => handleStateChange(state)}
-            className={`px-5 py-2.5 rounded-full cursor-pointer font-[Orbitron,sans-serif] transition-colors duration-300 ${
-              currentState === state
-                ? "bg-cyan-400 text-gray-900 font-bold shadow-[0_0_15px_rgba(34,211,238,0.5)]"
-                : "bg-transparent text-white/70 hover:bg-white/5"
-            }`}
-          >
-            {state}
-          </button>
-        ))}
-
-        <button
-          onClick={closeModal}
-          className="mt-5 bg-red-500/20 text-white border border-red-500 rounded-full py-2 cursor-pointer hover:bg-red-500/40 transition-colors"
-        >
-          CLOSE MODAL
+      <div className="relative flex flex-col  rounded-[20px] ">
+        <button onClick={closeModal} className=" text-white  ">
+          X
         </button>
       </div>
     </div>
