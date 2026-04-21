@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as THREE from "three";
 
 // --- Types for Web Speech API ---
@@ -35,11 +29,6 @@ type AppState = "IDLE" | "LISTENING" | "SPEAKING";
 const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const [isAudioActive, setIsAudioActive] = useState<boolean>(false);
-  const [currentState, setCurrentState] = useState<AppState>("IDLE");
-  const availableStates = useMemo<AppState[]>(
-    () => ["IDLE", "LISTENING", "SPEAKING"],
-    [],
-  );
 
   // State Ref for Animation Loop
   const stateRef = useRef<AppState>("IDLE");
@@ -417,7 +406,6 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
   // OPTIMIZATION 1: Stabilize the state change function so it doesn't recreate on every render
   const handleStateChange = useCallback(
     (newState: AppState) => {
-      setCurrentState(newState);
       stateRef.current = newState;
       if (newState === "LISTENING" && !isAudioActive) initSystem();
     },
