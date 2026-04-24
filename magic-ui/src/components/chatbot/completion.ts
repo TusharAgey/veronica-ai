@@ -34,6 +34,7 @@ const paramDefaults: LlamaParams = {
 let controller: AbortController | null = null;
 export function stopGeneration() {
   controller?.abort();
+  controller = null;
 }
 
 // Backstory is a system prompt that sets tone/behavior.
