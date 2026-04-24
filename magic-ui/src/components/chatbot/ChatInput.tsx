@@ -36,7 +36,10 @@ export function ChatInput({
           disabled={isFetching}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+          onKeyDown={(e) => {
+            if (e.shiftKey) return;
+            e.key === "Enter" && handleSubmit();
+          }}
           type="text"
           placeholder={`Message ${activeBot}...`}
           className="flex-1 min-w-0 bg-transparent border-none outline-none text-white placeholder:text-white/30 px-2 text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"

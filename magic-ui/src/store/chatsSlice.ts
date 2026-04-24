@@ -43,7 +43,7 @@ const chatsSlice = createSlice({
 
       state.sessions[action.payload.bot].push({
         user: data?.user ?? "",
-        assistant: "User Cancelled this response.",
+        assistant: "User Cancelled this response...",
       });
     },
     updateLatestLlmResponse(
