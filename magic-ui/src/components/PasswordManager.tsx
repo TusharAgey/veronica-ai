@@ -1,11 +1,19 @@
+import { useEffect } from "react";
 import { AddAccountForm } from "./password-manager/AddAccountForm";
 import { PasswordStats } from "./password-manager/PasswordStats";
 import { BrowsePassword } from "./password-manager/BrowsePassword";
 import { useGetAccountsQuery } from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 export default function PasswordManager() {
-  const { data: accounts = [] } = useGetAccountsQuery();
+  const { data: accounts = [], isError } = useGetAccountsQuery();
+  const { error: errorToast } = useToast();
 
+  useEffect(() => {
+    if (isError) {
+      errorToast("Failed to fetch accounts. Perhapse, the server is down");
+    }
+  }, [isError, errorToast]);
   return (
     <div className="grid lg:grid-cols-10 gap-6 h-full">
       {/* 50% Space (5 out of 10) */}

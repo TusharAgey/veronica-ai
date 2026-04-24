@@ -1,12 +1,32 @@
 import { Lock } from "lucide-react";
+import { useEffect, useState } from "react";
 import { MagicCard } from "../ui/MagicCard";
 import { GlassInput } from "../ui/GlassInput";
 import { pwdManagerFields } from "../../utilities/const";
 import { handleAddNewAccount } from "../../utilities/utils";
 import { useCreateNewAccountMutation } from "../../services/api";
+import { useToast } from "../../context/ToastContext";
 
 export function AddAccountForm() {
-  const [createNewAccount] = useCreateNewAccountMutation();
+  const [createNewAccount, { isError, isSuccess }] =
+    useCreateNewAccountMutation();
+  const { error: errorToast, success: successToast } = useToast();
+  const [currentFormTarget, setCurrentFormTarget] =
+    useState<HTMLFormElement | null>(null);
+
+  useEffect(() => {
+    if (isError) {
+      errorToast("Failed to add a new account. Perhapse, the server is down");
+    }
+  }, [isError, errorToast]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      currentFormTarget?.reset();
+      successToast("Succesfully added new account!");
+      setCurrentFormTarget(null);
+    }
+  }, [isSuccess, successToast, currentFormTarget]);
 
   return (
     <MagicCard className="col-span-2 p-8">
@@ -20,7 +40,7 @@ export function AddAccountForm() {
         onSubmit={(e) => {
           e.preventDefault();
           handleAddNewAccount(createNewAccount);
-          e.currentTarget.reset();
+          setCurrentFormTarget(e.currentTarget);
         }}
       >
         {pwdManagerFields.map(({ fieldIdentifier, fieldType, placeholder }) => (

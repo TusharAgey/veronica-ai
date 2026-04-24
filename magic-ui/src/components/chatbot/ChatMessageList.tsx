@@ -1,11 +1,42 @@
 import { useState, useRef, useEffect } from "react";
 import { Check, Copy } from "lucide-react";
+import { motion } from "framer-motion";
 import type { ChatTurn } from "../../services/types";
 
 interface ChatProps {
   chats: ChatTurn[];
 }
-
+// --- THE TYPING INDICATOR PILL ---
+const TypingIndicator = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="flex w-max max-w-[85%] md:max-w-[75%] mr-auto mb-4"
+    >
+      <div className="flex items-center gap-1.5 px-5 py-4 rounded-3xl rounded-tl-sm backdrop-blur-2xl saturate-[180%] bg-indigo-500/10 border border-indigo-500/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)]">
+        {/* The 3 bouncing dots */}
+        {[0, 1, 2].map((dot) => (
+          <motion.div
+            key={dot}
+            className="w-2 h-2 rounded-full bg-indigo-400"
+            animate={{
+              y: [0, -6, 0],
+              opacity: [0.4, 1, 0.4],
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: dot * 0.2, // Stagger the bounce!
+            }}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+};
 // --- NEW: Isolated CodeBlock component to handle its own copy state ---
 function CodeBlock({ language, code }: { language: string; code: string }) {
   const [isCopied, setIsCopied] = useState(false);
@@ -60,7 +91,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
 // --- UPDATED: MessageFormatter now uses the CodeBlock component ---
 function MessageFormatter({ text }: { text: string }) {
   if (text.trim() === "") {
-    return <>...</>;
+    return <TypingIndicator />;
   }
   const parts = text.split("```");
 
@@ -111,11 +142,15 @@ export function ChatMessageList({ chats }: ChatProps) {
           </div>
 
           {/* LLM MESSAGE (Left Aligned, Dark Card) */}
-          <div className="flex justify-start w-full">
-            <div className="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-5 rounded-r-2xl rounded-b-2xl rounded-tl-sm shadow-xl max-w-[90%]">
-              <MessageFormatter text={chat.assistant} />
+          {chat.assistant === "" ? (
+            <TypingIndicator />
+          ) : (
+            <div className="flex justify-start w-full">
+              <div className="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-5 rounded-r-2xl rounded-b-2xl rounded-tl-sm shadow-xl max-w-[90%]">
+                <MessageFormatter text={chat.assistant} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ))}
       <div ref={messagesEndRef} />
