@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAppDispatch, useAppSelector } from "../store/store";
-import { addUserPrompt, updateLatestLlmResponse } from "../store/chatsSlice";
+import {
+  addUserPrompt,
+  updateLatestLlmResponse,
+  removeLastUserPrompt,
+} from "../store/chatsSlice";
 import { useLazyRunLlamaQuery } from "../services/llamaApi";
 import { botPersonality } from "../utilities/const";
 // Extracted Sub-Components
@@ -10,6 +14,7 @@ import { ZapBackdrop } from "./chatbot/Zap";
 import { ChatInput } from "./chatbot/ChatInput";
 import { ChatMessageList } from "./chatbot/ChatMessageList";
 import { chatHistory } from "../utilities/utils";
+import { stopGeneration } from "./chatbot/completion";
 const AVAILABLE_BOTS = ["Code Bot", "Space Pirate"];
 
 export default function Chatbot() {
@@ -18,11 +23,17 @@ export default function Chatbot() {
   const { sessions } = useAppSelector((state) => state.chats);
   const chatsSoFar = sessions[activeBot] || [];
   const [runLlama, result] = useLazyRunLlamaQuery();
+
+  const handleStopQuery = () => {
+    dispatch(removeLastUserPrompt({ bot: activeBot }));
+    stopGeneration();
+  };
   /**
    * User submits prompt
    */
   const handleSend = async (input: string) => {
     if (!input.trim()) return;
+    stopGeneration(); // Cancel any inflight request.
 
     // add user row immediately
     dispatch(
@@ -73,7 +84,12 @@ export default function Chatbot() {
 
         {/* CHAT INPUT */}
         <motion.div layout className="w-full md:flex-1 min-w-0">
-          <ChatInput activeBot={activeBot} onSend={handleSend} />
+          <ChatInput
+            isFetching={result.data?.streaming}
+            activeBot={activeBot}
+            onSend={handleSend}
+            onCancel={handleStopQuery}
+          />
         </motion.div>
       </div>
     </div>

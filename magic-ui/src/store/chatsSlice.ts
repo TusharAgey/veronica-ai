@@ -33,7 +33,19 @@ const chatsSlice = createSlice({
         assistant: "",
       });
     },
+    removeLastUserPrompt(
+      state,
+      action: PayloadAction<{
+        bot: string;
+      }>,
+    ) {
+      const data = state.sessions[action.payload.bot].pop();
 
+      state.sessions[action.payload.bot].push({
+        user: data?.user ?? "",
+        assistant: "User Cancelled this response.",
+      });
+    },
     updateLatestLlmResponse(
       state,
       action: PayloadAction<{
@@ -56,7 +68,11 @@ const chatsSlice = createSlice({
   },
 });
 
-export const { addUserPrompt, updateLatestLlmResponse, clearChat } =
-  chatsSlice.actions;
+export const {
+  addUserPrompt,
+  updateLatestLlmResponse,
+  clearChat,
+  removeLastUserPrompt,
+} = chatsSlice.actions;
 
 export default chatsSlice.reducer;

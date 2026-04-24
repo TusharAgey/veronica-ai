@@ -6,7 +6,6 @@ import {
 import { optimizePayload } from "../../utilities/utils";
 import type {
   ChatMessage,
-  LlamaConfig,
   LlamaParams,
   LlamaChunk,
 } from "../../services/types";
@@ -18,7 +17,7 @@ const paramDefaults: LlamaParams = {
   repeat_last_n: 256,
   repeat_penalty: 1.18,
   top_k: 40,
-  top_p: 0.5,
+  top_p: 0.9,
   min_p: 0.05,
   tfs_z: 1,
   typical_p: 1,
@@ -27,23 +26,22 @@ const paramDefaults: LlamaParams = {
   mirostat: 0,
   mirostat_tau: 5,
   mirostat_eta: 0.1,
-  grammar: "",
   n_probs: 0,
-  image_data: [],
   cache_prompt: false, // Stop caching of prompt to ensure faster response and less memory usage.
   slot_id: 0,
   max_tokens: 1000, // This is to limit the tokens generated from LLAMA to ensure less memory footprint.
 };
+let controller: AbortController | null = null;
+export function stopGeneration() {
+  controller?.abort();
+}
 
 // Backstory is a system prompt that sets tone/behavior.
 export async function* llama(
   prompt: ChatMessage[],
   backstory: string,
   params: LlamaParams = {},
-  config: LlamaConfig = {},
 ): AsyncGenerator<string, string, void> {
-  let controller = config.controller;
-
   if (!controller) {
     controller = new AbortController();
   }
@@ -164,7 +162,6 @@ export async function* llama(
     throw error;
   } finally {
     reader.releaseLock();
-    controller.abort();
   }
 
   return content;

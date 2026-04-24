@@ -1,13 +1,20 @@
-import { Send, InfoIcon } from "lucide-react";
+import { Send, InfoIcon, X } from "lucide-react";
 import { useState } from "react";
 import { useGetActiveLLMModelQuery } from "../../services/api";
 
 interface ChatInputProps {
   activeBot: string;
   onSend: (input: string) => void;
+  isFetching: boolean | undefined;
+  onCancel: () => void;
 }
 
-export function ChatInput({ activeBot, onSend }: ChatInputProps) {
+export function ChatInput({
+  activeBot,
+  onSend,
+  isFetching,
+  onCancel,
+}: ChatInputProps) {
   const { data: activeLLMModel } = useGetActiveLLMModelQuery();
   const [input, setInput] = useState("");
   const handleSubmit = () => {
@@ -26,20 +33,31 @@ export function ChatInput({ activeBot, onSend }: ChatInputProps) {
         </div>
 
         <input
+          disabled={isFetching}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           type="text"
           placeholder={`Message ${activeBot}...`}
-          className="flex-1 min-w-0 bg-transparent border-none outline-none text-white placeholder:text-white/30 px-2 text-sm md:text-base"
+          className="flex-1 min-w-0 bg-transparent border-none outline-none text-white placeholder:text-white/30 px-2 text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
         />
-
-        <button
-          onClick={handleSubmit}
-          className="w-10 h-10 shrink-0 rounded-full bg-indigo-500 flex items-center justify-center hover:bg-indigo-400 transition-colors shadow-[0_0_15px_rgba(99,102,241,0.5)]"
-        >
-          <Send size={18} className="ml-1 text-white" />
-        </button>
+        {isFetching ? (
+          <button
+            disabled={!isFetching}
+            onClick={onCancel}
+            className="w-10 h-10 shrink-0 rounded-full bg-indigo-500 flex items-center justify-center hover:bg-indigo-400 transition-colors shadow-[0_0_15px_rgba(99,102,241,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-500 disabled:shadow-none"
+          >
+            <X size={18} className="ml-1 text-white" />
+          </button>
+        ) : (
+          <button
+            disabled={isFetching}
+            onClick={handleSubmit}
+            className="w-10 h-10 shrink-0 rounded-full bg-indigo-500 flex items-center justify-center hover:bg-indigo-400 transition-colors shadow-[0_0_15px_rgba(99,102,241,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-500 disabled:shadow-none"
+          >
+            <Send size={18} className="ml-1 text-white" />
+          </button>
+        )}
       </div>
     </div>
   );
