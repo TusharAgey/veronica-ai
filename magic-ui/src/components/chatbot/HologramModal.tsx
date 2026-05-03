@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as THREE from "three";
-
+import { useAppDispatch, useAppSelector } from "../../store/store";
+import { addUserPrompt, updateLatestLlmResponse } from "../../store/chatsSlice";
+import { useLazyRunLlamaQuery } from "../../services/llamaApi";
+import { botPersonality } from "../../utilities/const";
+import { chatHistory } from "../../utilities/utils";
+import type { ChatMessage } from "../../services/types";
 // --- Types for Web Speech API ---
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
@@ -24,9 +29,80 @@ interface HologramModalProps {
   onClose: () => void;
 }
 
-type AppState = "IDLE" | "LISTENING" | "SPEAKING";
+type AppState = "IDLE" | "LISTENING" | "SPEAKING" | "THINKING";
+const BOT = "Dizzy";
 
 const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
+  const { sessions } = useAppSelector((state) => state.chats);
+  const chatsSoFar = sessions[BOT] || [];
+  const chatsRef = useRef(chatsSoFar);
+  const [runLlama, result] = useLazyRunLlamaQuery();
+  const dispatch = useAppDispatch();
+  function speak(text: string) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.lang = "en-US";
+    utterance.onend = () => {
+      handleStateChange("LISTENING");
+    };
+    speechSynthesis.speak(utterance);
+  }
+  /**
+   * User submits prompt
+   */
+  function handleSend(input: string, conversationHistory: ChatMessage[]) {
+    console.log({ input, conversationHistory });
+    if (!input.trim()) return;
+
+    // add user row immediately
+    dispatch(
+      addUserPrompt({
+        bot: BOT,
+        user: input,
+      }),
+    );
+    // trigger stream
+    runLlama({
+      prompt: [
+        ...conversationHistory,
+        {
+          role: "user",
+          content: input,
+        },
+      ],
+      backstory: botPersonality[BOT],
+    });
+  }
+
+  // To ensure that chats are refreshed to latest state. This feeds into the LLM while querying.
+  useEffect(() => {
+    chatsRef.current = chatsSoFar;
+  }, [chatsSoFar]);
+  /**
+   * Sync stream output into chat slice
+   */
+  useEffect(() => {
+    if (!result.data || result.data?.streaming) return;
+    dispatch(
+      updateLatestLlmResponse({
+        bot: BOT,
+        assistant: result.data.content,
+      }),
+    );
+  }, [result.data?.content, BOT, dispatch, result.data?.streaming]);
+
+  useEffect(() => {
+    if (stateRef.current === "IDLE") return;
+    if (!result.data?.streaming) {
+      handleStateChange("SPEAKING");
+      console.log("TTS Received this data:", result.data?.content);
+      speak(result.data?.content || "");
+    } else {
+      handleStateChange("THINKING");
+    }
+  }, [result.data?.content, result.data?.streaming]);
+
   const mountRef = useRef<HTMLDivElement>(null);
   const [isAudioActive, setIsAudioActive] = useState<boolean>(false);
 
@@ -58,8 +134,7 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
 
   // --- 1. SPEECH RECOGNITION SETUP ---
   useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
@@ -68,17 +143,19 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const lastResultIndex = event.results.length - 1;
-        const transcript = event.results[lastResultIndex][0].transcript
-          .trim()
-          .toLowerCase();
+        const transcript = event.results[lastResultIndex][0].transcript.trim();
 
-        if (transcript.includes("start listening")) {
-          handleStateChange("LISTENING");
-        } else if (
-          transcript.includes("stop listening") ||
-          transcript.includes("go to sleep")
+        if (
+          transcript.toLowerCase().includes("stop listening") ||
+          transcript.toLowerCase().includes("go to sleep")
         ) {
           handleStateChange("IDLE");
+        } else if (stateRef.current === "LISTENING") {
+          handleSend(transcript, chatHistory(chatsRef.current));
+          handleStateChange("THINKING");
+        } else if (transcript.toLowerCase().includes("start listening")) {
+          console.log("Initiating voice command mode...");
+          handleStateChange("LISTENING");
         }
       };
 
@@ -369,7 +446,7 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
 
       let targetVol = 0;
       // FIX: Switch to performance.now()
-      if (s === "IDLE")
+      if (s === "IDLE" || s === "THINKING")
         targetVol = 0.15 + Math.sin(performance.now() * 0.005) * 0.05;
       else if (s === "LISTENING") targetVol = micVol || 0.2;
       else if (s === "SPEAKING") {
