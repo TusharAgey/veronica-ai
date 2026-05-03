@@ -7,9 +7,12 @@ import constants
 import logging
 from flask_cors import CORS
 from resources.password_manager import password_manager
+from resources.kokoro_tts import kokoro_tts
 
 app = Flask(__name__)
 app.register_blueprint(password_manager)
+app.register_blueprint(kokoro_tts)
+
 CORS(app, support_credentials=True)
 
 root = safe_join(os.path.dirname(__file__), 'code')
