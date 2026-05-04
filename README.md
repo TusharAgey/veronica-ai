@@ -30,7 +30,7 @@ Llama-Server:
 
 - Use https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md for running llama LLM inference engine.
 - Follow instructions on the official llama.cpp github to setup llama-server and once the executable is generated, use following command to bring up the LLM inference:
-  - ./llama-server -m [model file path] --port 6792 -t 4 -c 1024 --batch-size 256 --parallel 1 --mmap -np 1 --flash-attn on --cache-ram 0
+  - ./llama-server -m [model file path] --port 6792 -t 4 -c 1024 --parallel 1 --mmap -np 1 --flash-attn on --cache-ram 0 --reasoning off --host 0.0.0.0
     - Uses 1024 context window.
   - Tested using following model:
     - Phi-3.5-mini-instruct.IQ4_XS.gguf

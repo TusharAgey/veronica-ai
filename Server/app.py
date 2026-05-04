@@ -8,10 +8,18 @@ import logging
 from flask_cors import CORS
 from resources.password_manager import password_manager
 from resources.kokoro_tts import kokoro_tts
+from zeroconf import ServiceInfo, Zeroconf
+import socket
+import argparse
+import signal
+import sys
+import atexit
+import threading
 
 app = Flask(__name__)
 app.register_blueprint(password_manager)
 app.register_blueprint(kokoro_tts)
+zeroconf = Zeroconf()
 
 CORS(app, support_credentials=True)
 
@@ -43,7 +51,69 @@ def static_proxy_media(path):
 def static_proxy_images(path):
     return send_from_directory(imageFiles, path)
 
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    finally:
+        s.close()
+
+def broadcast_ip_to_local_network():
+    local_ip = get_local_ip()
+    python_backend_service = ServiceInfo(
+        "_http._tcp.local.",
+        "veronica-server._http._tcp.local.",
+        addresses=[socket.inet_aton(local_ip)],
+        port=8080,
+        server="veronica-server.local.",
+    )
+    llama_cpp_service = ServiceInfo(
+        "_http._tcp.local.",
+        "llama-server._http._tcp.local.",
+        addresses=[socket.inet_aton(local_ip)],
+        port=6792,
+        server="llama-server.local.",
+    )
+    print("Advertising IP:", local_ip)
+    # Registrations.
+    zeroconf.register_service(python_backend_service)
+    zeroconf.register_service(llama_cpp_service)
+
+_shutdown_lock = threading.Lock()
+_shutdown_started = False
+
+def stop_zeroconf():
+    global _shutdown_started
+    with _shutdown_lock:
+        if _shutdown_started:
+            return
+        _shutdown_started = True
+    try:
+        zeroconf.close()
+        print("Zeroconf closed.")
+    except Exception as e:
+        print(f"Error: {e}")
+
+atexit.register(stop_zeroconf)
+
+def signal_handler(sig, frame):
+    """Handles signals (like Ctrl+C) to gracefully handle cleanups."""
+    print("\nSignal received. Initiating clean shutdown...")
+    stop_zeroconf()
+    sys.exit(0) # Exit the application cleanly
+
+signal.signal(signal.SIGINT, signal_handler)  # SIGINT is typically triggered by Ctrl+C
+signal.signal(signal.SIGTERM, signal_handler) # Good practice for process termination signals
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--no-broadcast", action="store_true")
+    args = parser.parse_args()
+    if not args.no_broadcast:
+        broadcast_ip_to_local_network()
+
     DB_CREATION_STATUS = database_resource.createDatabase(logger);
     
     if(DB_CREATION_STATUS == constants.SUCCESS or DB_CREATION_STATUS == constants.ALREADY_EXISTS):

@@ -72,5 +72,8 @@ export const USER = "user";
 export const ASSISTANT = "assistant";
 export const SYSTEM = "system";
 export const LLAMA_RESPONSE_TERMINATOR_CONTENT = "data: [DONE]";
-export const LLAMA_SERVER_HOST_PORT = "http://127.0.0.1:6792";
-export const PYTHON_SERVER_HOST_PORT = "http://localhost:8080";
+
+// Switch with appropriate host/port if llama server & the backend is running elsewhere.
+// Below setup by-default assumes running locally and python server was agreed to setup zeroconf local network advertisement as per Server/app.py.
+export const LLAMA_SERVER_HOST_PORT = "http://llama-server.local:6792";
+export const PYTHON_SERVER_HOST_PORT = "http://veronica-server.local:8080";
