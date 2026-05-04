@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Check, Copy } from "lucide-react";
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import rehypeRaw from "rehype-raw";
+import type { Components } from "react-markdown";
 import type { ChatTurn } from "../../services/types";
 
 interface ChatProps {
@@ -88,39 +93,107 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   );
 }
 
-// --- UPDATED: MessageFormatter now uses the CodeBlock component ---
-function MessageFormatter({ text }: { text: string }) {
-  if (text.trim() === "") {
-    return <TypingIndicator />;
+function extractText(node: any): string {
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (Array.isArray(node)) {
+    return node.map(extractText).join("");
   }
-  const parts = text.split("```");
+  if (node?.props?.children) {
+    return extractText(node.props.children);
+  }
+  return "";
+}
+
+const components: Components = {
+  // 🧱 Block code
+  pre({ children }) {
+    const codeEl = children as any;
+    const className = codeEl?.props?.className || "";
+    const language = className.replace("language-", "");
+    const raw = codeEl?.props?.children;
+    const code = extractText(raw).replace(/\n$/, "");
+    return <CodeBlock language={language} code={code} />;
+  },
+
+  // ✨ Inline code ONLY
+  code({ children }) {
+    return (
+      <code className="bg-white/10 px-1 py-0.5 rounded font-mono text-sm">
+        {children}
+      </code>
+    );
+  },
+
+  // 🧼 Smart paragraph cleanup (your earlier issue)
+
+  p({ children }) {
+    const text = String(children).trim();
+    if (/^[^a-zA-Z0-9]+$/.test(text) && text.length < 4) {
+      return null;
+    }
+    return (
+      <p className="text-white/90 leading-relaxed text-[15px]">{children}</p>
+    );
+  },
+
+  // 🧾 Tables (LLM outputs LOVE these)
+
+  table({ children }) {
+    return (
+      <div className="overflow-x-auto my-3">
+        <table className="w-full border-collapse text-sm">{children}</table>
+      </div>
+    );
+  },
+
+  th({ children }) {
+    return (
+      <th className="border px-3 py-2 text-left bg-white/5">{children}</th>
+    );
+  },
+
+  td({ children }) {
+    return <td className="border px-3 py-2">{children}</td>;
+  },
+
+  // 🔗 Links (important UX + safety)
+
+  a({ href, children }) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-400 underline"
+      >
+        {children}
+      </a>
+    );
+  },
+};
+
+function MessageFormatter({ text }: { text: string }) {
+  if (!text?.trim()) return <TypingIndicator />;
 
   return (
-    <div className="flex flex-col gap-3">
-      {parts.map((part, index) => {
-        // Even indices are standard text
-        if (index % 2 === 0) {
-          return part.split("\n").map((line, i) => (
-            <p
-              key={`text-${index}-${i}`}
-              className="text-white/90 leading-relaxed text-[15px]"
-            >
-              {line}
-            </p>
-          ));
-        }
+    <div
+      className="prose prose-invert max-w-none
 
-        // Odd indices are code blocks!
-        const newlineIndex = part.indexOf("\n");
-        const language =
-          newlineIndex > -1 ? part.substring(0, newlineIndex).trim() : "";
-        const code =
-          newlineIndex > -1 ? part.substring(newlineIndex + 1) : part;
+      prose-code:before:content-none
 
-        return (
-          <CodeBlock key={`code-${index}`} language={language} code={code} />
-        );
-      })}
+      prose-code:after:content-none"
+    >
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[
+          rehypeHighlight,
+          rehypeRaw, // ⚠️ allow HTML if needed (optional)
+        ]}
+        components={components}
+      >
+        {text}
+      </ReactMarkdown>
     </div>
   );
 }
