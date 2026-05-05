@@ -106,7 +106,6 @@ function extractText(node: any): string {
 }
 
 const components: Components = {
-  // 🧱 Block code
   pre({ children }) {
     const codeEl = children as any;
     const className = codeEl?.props?.className || "";
@@ -116,7 +115,6 @@ const components: Components = {
     return <CodeBlock language={language} code={code} />;
   },
 
-  // ✨ Inline code ONLY
   code({ children }) {
     return (
       <code className="bg-white/10 px-1 py-0.5 rounded font-mono text-sm">
@@ -124,8 +122,6 @@ const components: Components = {
       </code>
     );
   },
-
-  // 🧼 Smart paragraph cleanup (your earlier issue)
 
   p({ children }) {
     const text = String(children).trim();
@@ -136,8 +132,6 @@ const components: Components = {
       <p className="text-white/90 leading-relaxed text-[15px]">{children}</p>
     );
   },
-
-  // 🧾 Tables (LLM outputs LOVE these)
 
   table({ children }) {
     return (
@@ -157,8 +151,6 @@ const components: Components = {
     return <td className="border px-3 py-2">{children}</td>;
   },
 
-  // 🔗 Links (important UX + safety)
-
   a({ href, children }) {
     return (
       <a
@@ -177,19 +169,10 @@ function MessageFormatter({ text }: { text: string }) {
   if (!text?.trim()) return <TypingIndicator />;
 
   return (
-    <div
-      className="prose prose-invert max-w-none
-
-      prose-code:before:content-none
-
-      prose-code:after:content-none"
-    >
+    <div className="prose prose-invert max-w-none prose-code:before:content-none prose-code:after:content-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[
-          rehypeHighlight,
-          rehypeRaw, // ⚠️ allow HTML if needed (optional)
-        ]}
+        rehypePlugins={[rehypeHighlight, rehypeRaw]}
         components={components}
       >
         {text}

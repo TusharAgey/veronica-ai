@@ -5,6 +5,7 @@ import { addUserPrompt, updateLatestLlmResponse } from "../../store/chatsSlice";
 import { useLazyRunLlamaQuery } from "../../services/llamaApi";
 import { botPersonality } from "../../utilities/const";
 import { chatHistory } from "../../utilities/utils";
+import { getKokoroAudio } from "../../utilities/apiCalls";
 import type { ChatMessage } from "../../services/types";
 // --- Types for Web Speech API ---
 interface SpeechRecognitionEvent extends Event {
@@ -31,6 +32,8 @@ interface HologramModalProps {
 
 type AppState = "IDLE" | "LISTENING" | "SPEAKING" | "THINKING";
 const BOT = "Dizzy";
+const SILENCE_BASE64 =
+  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
 const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
   const { sessions } = useAppSelector((state) => state.chats);
@@ -38,15 +41,26 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
   const chatsRef = useRef(chatsSoFar);
   const [runLlama, result] = useLazyRunLlamaQuery();
   const dispatch = useAppDispatch();
-  function speak(text: string) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.lang = "en-US";
-    utterance.onend = () => {
-      handleStateChange("LISTENING");
-    };
-    speechSynthesis.speak(utterance);
+  const audioRef = useRef(new Audio());
+
+  async function speak(text: string) {
+    try {
+      const response = await getKokoroAudio(text);
+      const audioUrl = URL.createObjectURL(response.data);
+
+      // Re-use the exactly same, already-blessed audio instance
+      audioRef.current.src = audioUrl;
+      audioRef.current.onended = () => {
+        handleStateChange("LISTENING");
+        // Memory management
+        URL.revokeObjectURL(audioUrl);
+      };
+      // Start speaking animation
+      handleStateChange("SPEAKING");
+      audioRef.current.play();
+    } catch (error) {
+      console.error(error);
+    }
   }
   /**
    * User submits prompt
@@ -95,8 +109,6 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (stateRef.current === "IDLE") return;
     if (!result.data?.streaming) {
-      handleStateChange("SPEAKING");
-      console.log("TTS Received this data:", result.data?.content);
       speak(result.data?.content || "");
     } else {
       handleStateChange("THINKING");
@@ -215,6 +227,13 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
           recognitionRef.current.start();
         } catch (e) {}
       }
+
+      // BLESS THE AUDIO OBJECT FOR SAFARI
+      audioRef.current.src = SILENCE_BASE64;
+      audioRef.current.play().catch((e) => {
+        // It's normal for some browsers to throw a harmless warning here
+        console.warn("Silence blocked, but element is blessed:", e);
+      });
     } catch (err) {
       console.error("System Init Error:", err);
       alert("Microphone access is required for voice commands.");
