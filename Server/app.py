@@ -69,17 +69,8 @@ def broadcast_ip_to_local_network():
         port=8080,
         server="veronica-server.local.",
     )
-    llama_cpp_service = ServiceInfo(
-        "_http._tcp.local.",
-        "llama-server._http._tcp.local.",
-        addresses=[socket.inet_aton(local_ip)],
-        port=6792,
-        server="llama-server.local.",
-    )
-    print("Advertising IP:", local_ip)
     # Registrations.
-    zeroconf.register_service(python_backend_service)
-    zeroconf.register_service(llama_cpp_service)
+    zeroconf.register_service(python_backend_service) 
 
 _shutdown_lock = threading.Lock()
 _shutdown_started = False

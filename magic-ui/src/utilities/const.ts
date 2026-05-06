@@ -76,9 +76,3 @@ export const LLAMA_RESPONSE_TERMINATOR_CONTENT = "data: [DONE]";
 // Below config is tied to vite config and strictly for local run/implementation. For production deployment, update these to actual server URIs.
 export const LLAMA_SERVER_HOST_PORT = "/llama";
 export const PYTHON_SERVER_HOST_PORT = "/api";
-
-// Switch with appropriate host/port if llama server & the backend is running elsewhere.
-// Below setup by-default assumes running locally and python server was agreed to setup zeroconf local network advertisement as per Server/app.py.
-export const LLAMA_SERVER_HOST_PORT_PROXY = "http://llama-server.local:6792";
-export const PYTHON_SERVER_HOST_PORT_PROXY =
-  "http://veronica-server.local:8080";
