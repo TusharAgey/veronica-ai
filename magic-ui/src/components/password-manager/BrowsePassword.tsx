@@ -69,8 +69,8 @@ export function BrowsePassword() {
           onChange={(e) => setSessionPassword(e.target.value)}
         />
 
-        {/* Toggle Visibility Button */}
-        <div className="flex justify-start">
+        {/* Toggle Visibility Button — centered on mobile, inline on desktop */}
+        <div className="flex justify-center md:justify-start">
           <button
             style={
               passwordShowButtonDisabled
