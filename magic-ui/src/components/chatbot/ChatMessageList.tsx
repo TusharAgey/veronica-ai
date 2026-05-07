@@ -184,15 +184,17 @@ function MessageFormatter({ text }: { text: string }) {
 export function ChatMessageList({ chats }: ChatProps) {
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   useEffect(() => {
-    messagesEndRef.current && messagesEndRef.current.scrollIntoView();
+    messagesEndRef.current &&
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   });
+
   return (
-    <div className="flex-1 overflow-y-auto pt-4 pb-4 px-2 flex flex-col gap-8 scrollbar-hide z-10">
+    <div className="flex-1 overflow-y-auto pt-4 pb-4 px-4 sm:px-6 flex flex-col gap-4 md:gap-8 scrollbar-hide z-10">
       {[...chats].map((chat, idx) => (
         <div key={idx} className="flex flex-col gap-6 w-full">
           {/* USER MESSAGE (Right Aligned, Cyan Pill) */}
           <div className="flex justify-end w-full">
-            <div className="bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] text-white px-6 py-3 rounded-t-2xl rounded-l-2xl rounded-br-sm   max-w-[80%] text-[15px] font-medium">
+            <div className="bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] text-white px-6 py-3 rounded-t-2xl rounded-l-2xl rounded-br-md max-w-[85%] sm:max-w-[80%] text-[15px] font-medium">
               {chat.user}
             </div>
           </div>

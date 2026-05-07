@@ -22,13 +22,15 @@ export function TopHeader({
     <header
       className={
         activeTab === "chatbot"
-          ? "h-16 flex items-center justify-between shrink-0 z-20"
+          ? "h-12 md:h-16 flex items-center justify-end shrink-0 z-20"
           : "h-16 flex items-center justify-between mb-6 shrink-0 z-20"
       }
     >
-      <h1 className="text-2xl font-semibold capitalize tracking-wide text-white">
-        {title}
-      </h1>
+      {activeTab !== "chatbot" && (
+        <h1 className="text-2xl font-semibold capitalize tracking-wide text-white">
+          {title}
+        </h1>
+      )}
 
       <div
         className={`flex items-center gap-4 px-4 py-2 backdrop-blur-xl rounded-full shadow-inner transition-colors duration-1000 ${profileClasses}`}

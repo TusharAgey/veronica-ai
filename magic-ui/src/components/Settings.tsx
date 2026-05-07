@@ -26,7 +26,7 @@ export default function Settings({
         className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
-      <div className="fixed top-0 right-0 h-full w-80 backdrop-blur-3xl saturate-[180%] bg-black/20 border-l border-white/[0.08] shadow-2xl rounded-l-3xl z-50 p-6 flex flex-col transition-transform">
+      <div className="fixed top-0 right-0 h-full w-80 max-w-[85vw] backdrop-blur-3xl saturate-[180%] bg-black/20 border-l border-white/[0.08] shadow-2xl rounded-l-3xl z-50 p-6 flex flex-col transition-transform">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-lg font-semibold text-white">Configuration</h2>
           <button

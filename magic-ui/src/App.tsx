@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Views & Modals
@@ -20,10 +20,60 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [theme, setTheme] = useState<"dark" | "midnight">("dark");
   const [blurValue, setBlurValue] = useState(5);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
   }, []);
+
+  // ── Mobile Keyboard: visualViewport API ──────────────────────
+  // Detects when the virtual keyboard opens/closes and adjusts the
+  // app container height so no whitespace appears above the keyboard.
+  const handleViewportResize = useCallback(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const root = document.getElementById("root");
+    if (!root) return;
+
+    const windowHeight = window.screen.height;
+    const viewportHeight = vv.height;
+    const offsetTop = vv.offsetTop;
+
+    // If the visual viewport is significantly smaller than the screen
+    // AND it's shifted up (keyboard is open), pin the root height.
+    const diff = windowHeight - viewportHeight;
+    const keyboardThreshold = 100; // ignore tiny differences (e.g. URL bar)
+
+    if (diff > keyboardThreshold && offsetTop === 0) {
+      // Keyboard is open — pin root to the visual viewport height
+      root.style.height = `${viewportHeight}px`;
+      root.classList.add("keyboard-open");
+      setKeyboardHeight(diff);
+    } else {
+      // Keyboard is closed — restore natural height
+      root.style.height = "";
+      root.classList.remove("keyboard-open");
+      setKeyboardHeight(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    // Listen to both resize and scroll events on visualViewport
+    vv.addEventListener("resize", handleViewportResize);
+    vv.addEventListener("scroll", handleViewportResize);
+
+    // Run once on mount to catch any initial state
+    handleViewportResize();
+
+    return () => {
+      vv.removeEventListener("resize", handleViewportResize);
+      vv.removeEventListener("scroll", handleViewportResize);
+    };
+  }, [handleViewportResize]);
 
   return (
     <>
@@ -40,7 +90,9 @@ export default function App() {
           <SpatialEnvironment />
 
           {/* UI LAYER */}
-          <div className="relative z-10 flex flex-col md:flex-row w-full h-full p-3 md:p-10 gap-4 md:gap-8 pb-28 md:pb-10">
+          <div
+            className={`relative z-10 flex flex-col md:flex-row w-full h-full p-2 md:p-10 gap-3 md:gap-8 ${keyboardHeight > 0 ? "pb-4" : "pb-24 md:pb-10"}`}
+          >
             <Settings
               isOpen={isSettingsOpen}
               onClose={() => setIsSettingsOpen(false)}

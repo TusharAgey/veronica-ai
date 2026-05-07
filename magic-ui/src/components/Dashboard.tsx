@@ -8,7 +8,7 @@ export default function Dashboard() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-2">
       {/* AI Bots List */}
-      <MagicCard className="col-span-2 p-8 h-64 border-indigo-500/30">
+      <MagicCard className="col-span-2 p-8 min-h-[200px] md:h-64 border-indigo-500/30">
         <div className="flex justify-between items-start mb-6">
           <h2 className="text-2xl font-semibold text-white">AI Bots</h2>
           <Zap className="text-indigo-400" />
