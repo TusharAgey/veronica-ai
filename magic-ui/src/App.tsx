@@ -36,7 +36,13 @@ export default function App() {
     const root = document.getElementById("root");
     if (!root) return;
 
-    const windowHeight = window.screen.height;
+    // Use the layout viewport (innerHeight) instead of screen.height to
+    // avoid false positives from browser chrome (URL bar, toolbars, etc.)
+    // on mobile. screen.height includes the area behind browser chrome,
+    // so its delta with visualViewport.height can exceed 100 even when
+    // the keyboard is closed. innerHeight already excludes browser chrome,
+    // so a significant delta reliably indicates the keyboard is open.
+    const layoutHeight = window.innerHeight;
     const viewportHeight = vv.height;
     const offsetTop = vv.offsetTop;
 
@@ -51,12 +57,23 @@ export default function App() {
       return;
     }
 
-    // If the visual viewport is significantly smaller than the screen
+    // Also require an active editable element to confirm the keyboard is
+    // actually open. On mobile, the visual viewport can shrink due to
+    // browser chrome (URL bar collapsing, etc.) without the keyboard
+    // being present.
+    const activeEl = document.activeElement;
+    const isEditable =
+      activeEl &&
+      (activeEl.tagName === "INPUT" ||
+        activeEl.tagName === "TEXTAREA" ||
+        (activeEl as HTMLElement).isContentEditable);
+
+    // If the visual viewport is significantly smaller than the layout viewport
     // AND it's shifted up (keyboard is open), pin the root height.
-    const diff = windowHeight - viewportHeight;
+    const diff = layoutHeight - viewportHeight;
     const keyboardThreshold = 100; // ignore tiny differences (e.g. URL bar)
 
-    if (diff > keyboardThreshold && offsetTop === 0) {
+    if (diff > keyboardThreshold && offsetTop === 0 && isEditable) {
       // Keyboard is open — pin root to the visual viewport height
       root.style.height = `${viewportHeight}px`;
       root.classList.add("keyboard-open");
