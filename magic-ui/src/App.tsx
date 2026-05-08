@@ -40,6 +40,17 @@ export default function App() {
     const viewportHeight = vv.height;
     const offsetTop = vv.offsetTop;
 
+    // Only apply keyboard detection on touch-capable devices to avoid
+    // treating desktop browser chrome (toolbar, address bar, etc.) as a keyboard.
+    const isTouchDevice =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice) {
+      root.style.height = "";
+      root.classList.remove("keyboard-open");
+      setKeyboardHeight(0);
+      return;
+    }
+
     // If the visual viewport is significantly smaller than the screen
     // AND it's shifted up (keyboard is open), pin the root height.
     const diff = windowHeight - viewportHeight;

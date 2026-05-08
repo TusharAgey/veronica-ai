@@ -24,6 +24,13 @@ export default function Chatbot() {
   const chatsSoFar = sessions[activeBot] || [];
   const [runLlama, result] = useLazyRunLlamaQuery();
 
+  // Only apply safe-area keyboard padding on mobile (touch) devices.
+  // On desktop the md:pb-6 class handles spacing correctly.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  }, []);
+
   const handleStopQuery = () => {
     dispatch(removeLastUserPrompt({ bot: activeBot }));
     stopGeneration();
@@ -76,9 +83,11 @@ export default function Chatbot() {
       {/* --- PINNED INPUT DOCK (Side-by-side layout) --- */}
       <div
         className="mt-auto shrink-0 w-full p-4 pb-20 md:pb-6 relative z-10 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent flex flex-col md:flex-row items-end md:items-center gap-3"
-        style={{
-          paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))",
-        }}
+        style={
+          isMobile
+            ? { paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }
+            : undefined
+        }
       >
         {/* BOT SELECTOR */}
         <BotSelector
