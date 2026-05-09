@@ -33,7 +33,3 @@ The dev server starts at `http://localhost:5173` with HMR, proxy configuration, 
 - **Tailwind CSS 3** for styling
 - **shadcn/ui** primitives
 - **Lucide React** icons
-
-## Project Structure
-
-See the [root README](../README.md#-project-structure) for the full project tree.
