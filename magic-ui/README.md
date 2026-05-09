@@ -33,3 +33,9 @@ The dev server starts at `http://localhost:5173` with HMR, proxy configuration, 
 - **Tailwind CSS 3** for styling
 - **shadcn/ui** primitives
 - **Lucide React** icons
+
+## LLMs Used for UI development
+
+- **Google Gemini** For Glassmorphism and entire UX migration from old Chakra UI base
+- **ChatGPT Codex** For hooking up RTK and appropriate state management across the Frontend
+- **Deepseek** Minor bug fixes and touch-ups at the end
