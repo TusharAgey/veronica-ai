@@ -82,8 +82,6 @@ Run a [llama.cpp server](https://github.com/ggml-org/llama.cpp/blob/master/tools
 
 ```bash
 ./start.sh        # Server + UI
-./uistart.sh      # UI only
-./serverstart.sh  # Server only
 ```
 
 ---
