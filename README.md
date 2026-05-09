@@ -1,6 +1,6 @@
 <div align="center">
   <br/>
-  <img src="" alt="Veronica AI" width="700" style="border-radius: 20px; box-shadow: 0 20px 60px rgba(99,102,241,0.3);" />
+  <img src="./magic-ui/src/assets/dashboard.png" alt="Veronica AI" width="700" style="border-radius: 20px; box-shadow: 0 20px 60px rgba(99,102,241,0.3);" />
   <br/>
   <h1>Veronica AI</h1>
   <p><em>Your Personal Glassmorphism Virtual Assistant</em></p>
@@ -13,7 +13,7 @@
     <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" />
   </p>
   <p>
-    <a href="https://tusharagey.github.io/veronica-ai">🌐 GitHub Pages</a>
+    <a href="https://tusharagey.github.io/veronica-ai">Demo</a>
   </p>
 </div>
 
