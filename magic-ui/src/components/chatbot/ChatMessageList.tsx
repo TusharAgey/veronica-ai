@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Check, Copy } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Check, Copy, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -182,36 +182,80 @@ function MessageFormatter({ text }: { text: string }) {
 }
 
 export function ChatMessageList({ chats }: ChatProps) {
+  const scrollContainerRef = useRef<null | HTMLDivElement>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const isAtBottomRef = useRef(true);
+  const [showScrollDown, setShowScrollDown] = useState(false);
+
+  // Check if the user is scrolled to the bottom (within a threshold)
+  // Updates ref synchronously — no stale reads for auto-scroll
+  const checkIsAtBottom = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const threshold = 60;
+    const atBottom =
+      el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    isAtBottomRef.current = atBottom;
+    setShowScrollDown(!atBottom);
+  }, []);
+
+  // Scroll to bottom (smooth for explicit user action)
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    isAtBottomRef.current = true;
+    setShowScrollDown(false);
+  }, []);
+
+  // Auto-scroll when at bottom: on new messages AND during streaming
+  // Uses ref for isAtBottom — synchronous, no stale state race.
   useEffect(() => {
-    messagesEndRef.current &&
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-  });
+    if (!isAtBottomRef.current) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chats]);
 
   return (
-    <div className="flex-1 overflow-y-auto pt-4 pb-4 px-4 sm:px-6 flex flex-col gap-4 md:gap-8 scrollbar-hide z-10">
-      {[...chats].map((chat, idx) => (
-        <div key={idx} className="flex flex-col gap-6 w-full">
-          {/* USER MESSAGE (Right Aligned, Cyan Pill) */}
-          <div className="flex justify-end w-full">
-            <div className="bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] text-white px-6 py-3 rounded-t-2xl rounded-l-2xl rounded-br-md max-w-[85%] sm:max-w-[80%] text-[15px] font-medium">
-              {chat.user}
-            </div>
-          </div>
-
-          {/* LLM MESSAGE (Left Aligned, Dark Card) */}
-          {chat.assistant === "" ? (
-            <TypingIndicator />
-          ) : (
-            <div className="flex justify-start w-full">
-              <div className="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-5 rounded-r-2xl rounded-b-2xl rounded-tl-sm shadow-xl max-w-[90%]">
-                <MessageFormatter text={chat.assistant} />
+    <div className="relative flex-1 overflow-hidden">
+      <div
+        ref={scrollContainerRef}
+        onScroll={checkIsAtBottom}
+        className="h-full overflow-y-auto pt-4 pb-4 px-4 sm:px-6 flex flex-col gap-4 md:gap-8 scrollbar-hide z-10"
+      >
+        {[...chats].map((chat, idx) => (
+          <div key={idx} className="flex flex-col gap-6 w-full">
+            {/* USER MESSAGE (Right Aligned, Cyan Pill) */}
+            <div className="flex justify-end w-full">
+              <div className="bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] text-white px-6 py-3 rounded-t-2xl rounded-l-2xl rounded-br-md max-w-[85%] sm:max-w-[80%] text-[15px] font-medium">
+                {chat.user}
               </div>
             </div>
-          )}
-        </div>
-      ))}
-      <div ref={messagesEndRef} />
+
+            {/* LLM MESSAGE (Left Aligned, Dark Card) */}
+            {chat.assistant === "" ? (
+              <TypingIndicator />
+            ) : (
+              <div className="flex justify-start w-full">
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-5 rounded-r-2xl rounded-b-2xl rounded-tl-sm shadow-xl max-w-[90%]">
+                  <MessageFormatter text={chat.assistant} />
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Scroll-to-bottom pill */}
+      {showScrollDown && (
+        <motion.button
+          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.9 }}
+          onClick={scrollToBottom}
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-3xl saturate-[180%] bg-white/[0.08] border border-white/[0.12] shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] hover:bg-white/[0.14] hover:border-indigo-400/30 transition-all duration-200 cursor-pointer"
+        >
+          <ChevronDown size={18} className="text-white/80" />
+        </motion.button>
+      )}
     </div>
   );
 }

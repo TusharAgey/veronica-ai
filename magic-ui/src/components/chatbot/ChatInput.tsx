@@ -29,11 +29,7 @@ export function ChatInput({
   return (
     <div className="mt-auto relative z-10 w-full">
       <div
-        className={`flex items-center p-1.5 pl-3 gap-2 rounded-full backdrop-blur-3xl saturate-[180%] bg-white/[0.04] border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.15)] w-full transition-all duration-300 ${
-          input.trim()
-            ? "shadow-[0_8px_32px_0_rgba(99,102,241,0.15),inset_0_1px_1px_rgba(255,255,255,0.15)] border-indigo-500/20"
-            : ""
-        }`}
+        className={`flex items-center p-1.5 pl-3 gap-2 rounded-full backdrop-blur-3xl saturate-[180%] bg-white/[0.04] border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.15)] w-full transition-all duration-300`}
       >
         <div
           title={activeLLMModel?.models?.[0]?.name ?? "not-loaded"}
