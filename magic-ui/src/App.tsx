@@ -1,18 +1,26 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Views & Modals
-import Sidebar from "./components/SideMenuBar";
-import Settings from "./components/Settings";
-import Dashboard from "./components/Dashboard";
-import PasswordManager from "./components/PasswordManager";
-import Journal from "./components/Journal";
-import Chatbot from "./components/Chatbot";
-import HologramModal from "./components/chatbot/HologramModal";
+// Views & Modals — lazy-loaded for code splitting
+const Sidebar = lazy(() => import("./components/SideMenuBar"));
+const Settings = lazy(() => import("./components/Settings"));
+const Dashboard = lazy(() => import("./components/Dashboard"));
+const PasswordManager = lazy(() => import("./components/PasswordManager"));
+const Journal = lazy(() => import("./components/Journal"));
+const Chatbot = lazy(() => import("./components/Chatbot"));
+const HologramModal = lazy(() => import("./components/chatbot/HologramModal"));
 // Extracted Layout Components
 import { SpatialEnvironment } from "./components/layout/SpatialEnvironment";
 import { MainGlassPanel } from "./components/layout/MainGlassPanel";
 import { TopHeader } from "./components/layout/TopHeader";
+
+function ViewFallback() {
+  return (
+    <div className="flex items-center justify-center h-full w-full">
+      <div className="w-8 h-8 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+    </div>
+  );
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -108,10 +116,12 @@ export default function App() {
       {activeTab === "hologram" ? (
         <>
           <input id="user-text-input" hidden></input>
-          <HologramModal
-            isOpen={true}
-            onClose={() => setActiveTab("chatbot")}
-          />
+          <Suspense fallback={<ViewFallback />}>
+            <HologramModal
+              isOpen={true}
+              onClose={() => setActiveTab("chatbot")}
+            />
+          </Suspense>
         </>
       ) : (
         <div className="fixed inset-0 w-full h-full overflow-hidden text-slate-50 bg-black">
@@ -121,22 +131,26 @@ export default function App() {
           <div
             className={`relative z-10 flex flex-col md:flex-row w-full h-full p-2 md:p-10 gap-3 md:gap-8 ${keyboardHeight > 0 ? "pb-4" : "pb-24 md:pb-10"}`}
           >
-            <Settings
-              isOpen={isSettingsOpen}
-              onClose={() => setIsSettingsOpen(false)}
-              theme={theme}
-              setTheme={setTheme}
-              blurValue={blurValue}
-              setBlurValue={setBlurValue}
-            />
+            <Suspense fallback={null}>
+              <Settings
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                theme={theme}
+                setTheme={setTheme}
+                blurValue={blurValue}
+                setBlurValue={setBlurValue}
+              />
+            </Suspense>
 
-            <Sidebar
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              isCollapsed={isSidebarCollapsed}
-              setIsCollapsed={setIsSidebarCollapsed}
-              blurValue={blurValue}
-            />
+            <Suspense fallback={null}>
+              <Sidebar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={isSidebarCollapsed}
+                setIsCollapsed={setIsSidebarCollapsed}
+                blurValue={blurValue}
+              />
+            </Suspense>
 
             <MainGlassPanel theme={theme} blurValue={blurValue}>
               <TopHeader
@@ -156,10 +170,12 @@ export default function App() {
                     transition={{ duration: 0.3, ease: "easeOut" }}
                     className="h-full"
                   >
-                    {activeTab === "dashboard" && <Dashboard />}
-                    {activeTab === "passwords" && <PasswordManager />}
-                    {activeTab === "journal" && <Journal />}
-                    {activeTab === "chatbot" && <Chatbot />}
+                    <Suspense fallback={<ViewFallback />}>
+                      {activeTab === "dashboard" && <Dashboard />}
+                      {activeTab === "passwords" && <PasswordManager />}
+                      {activeTab === "journal" && <Journal />}
+                      {activeTab === "chatbot" && <Chatbot />}
+                    </Suspense>
                   </motion.div>
                 </AnimatePresence>
               </div>
