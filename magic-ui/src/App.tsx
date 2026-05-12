@@ -8,7 +8,9 @@ const Dashboard = lazy(() => import("./components/Dashboard"));
 const PasswordManager = lazy(() => import("./components/PasswordManager"));
 const Journal = lazy(() => import("./components/Journal"));
 const Chatbot = lazy(() => import("./components/Chatbot"));
-const HologramModal = lazy(() => import("./components/chatbot/HologramModal"));
+const HologramModal = lazy(
+  () => import("./components/chatbot/hologram/HologramModal"),
+);
 // Extracted Layout Components
 import { SpatialEnvironment } from "./components/layout/SpatialEnvironment";
 import { MainGlassPanel } from "./components/layout/MainGlassPanel";
