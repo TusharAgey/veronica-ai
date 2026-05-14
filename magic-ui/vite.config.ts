@@ -41,6 +41,56 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    // Vite 8 uses Rolldown. The deprecated `rollupOptions` is replaced by `rolldownOptions`.
+    // `manualChunks` is a function in Rolldown, not an object.
+    // The recommended approach is `codeSplitting` with `groups` using `test` (regex) and `name`.
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "vendor",
+              test: /node_modules[\\/](react|react-dom|react-redux|@reduxjs\/toolkit)/,
+              priority: 10,
+              minSize: 0,
+            },
+            {
+              name: "vendor-animation",
+              test: /node_modules[\\/]framer-motion/,
+              priority: 10,
+              minSize: 0,
+            },
+            {
+              name: "vendor-three",
+              test: /node_modules[\\/]three/,
+              priority: 10,
+              minSize: 0,
+            },
+            {
+              name: "vendor-animation",
+              test: /node_modules[\\/]anime/,
+              priority: 10,
+              minSize: 0,
+            },
+            {
+              name: "vendor-markdown",
+              test: /node_modules[\\/](react-markdown|rehype-highlight|rehype-raw|remark-gfm)/,
+              priority: 10,
+              minSize: 0,
+            },
+            {
+              name: "vendor-icons",
+              test: /node_modules[\\/]lucide-react/,
+              priority: 10,
+              minSize: 0,
+            },
+          ],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",
