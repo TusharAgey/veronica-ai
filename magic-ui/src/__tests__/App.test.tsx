@@ -7,11 +7,18 @@ import App from "../App";
 import chatsReducer from "../store/chatsSlice";
 import { ToastProvider } from "../context/ToastContext";
 
-// Mock framer-motion - strip out framer-motion specific props
+// Mock framer-motion - strip out framer-motion specific props to avoid DOM warnings
 function createMotionComponent(Tag: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ({ children, ...props }: Record<string, any>) =>
-    React.createElement(Tag, props, children);
+  return ({
+    children,
+    layout,
+    initial,
+    animate,
+    exit,
+    layoutId,
+    ...props
+  }: Record<string, any>) => React.createElement(Tag, props, children);
 }
 
 vi.mock("framer-motion", () => ({
@@ -34,8 +41,11 @@ vi.mock("framer-motion", () => ({
 }));
 
 // Mock all lazy-loaded view components so they render synchronously in tests
+const mockSetActiveTab = vi.fn();
 vi.mock("../components/SideMenuBar", () => ({
   default: ({ activeTab, setActiveTab, isCollapsed }: any) => {
+    // Store setActiveTab for assertions
+    mockSetActiveTab.mockImplementation(setActiveTab);
     const NAV_ITEMS = [
       { id: "dashboard", label: "Dashboard" },
       { id: "passwords", label: "Passwords" },
@@ -45,7 +55,7 @@ vi.mock("../components/SideMenuBar", () => ({
     ];
     return React.createElement(
       "div",
-      null,
+      { "data-testid": "sidebar" },
       NAV_ITEMS.map((item: any) =>
         React.createElement(
           "button",
@@ -58,6 +68,10 @@ vi.mock("../components/SideMenuBar", () => ({
           item.label,
         ),
       ),
+      React.createElement("button", {
+        "data-testid": "sidebar-toggle",
+        onClick: () => {},
+      }),
     );
   },
 }));
@@ -230,5 +244,10 @@ describe("App", () => {
     expect(
       await screen.findByPlaceholderText("Message Code Bot..."),
     ).toBeInTheDocument();
+  });
+
+  it("renders the sidebar element", async () => {
+    renderWithProviders(<App />);
+    expect(await screen.findByTestId("sidebar")).toBeInTheDocument();
   });
 });

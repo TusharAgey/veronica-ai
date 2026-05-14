@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ToastProvider, useToast } from "../../context/ToastContext";
 
-// Mock framer-motion
+// Mock framer-motion - strip non-boolean props to avoid DOM warnings
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, layout, initial, animate, exit, ...props }: any) => (
+      <div {...props}>{children}</div>
+    ),
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
@@ -77,5 +79,18 @@ describe("ToastContext", () => {
     fireEvent.click(closeButton);
 
     expect(screen.queryByText("Info toast")).not.toBeInTheDocument();
+  });
+
+  it("does not show duplicate toasts with the same message", () => {
+    renderWithProvider();
+    const infoButton = screen.getByText("Show Info");
+
+    // Click the same button twice
+    fireEvent.click(infoButton);
+    fireEvent.click(infoButton);
+
+    // Should only have one toast rendered
+    const toasts = screen.getAllByText("Info toast");
+    expect(toasts).toHaveLength(1);
   });
 });

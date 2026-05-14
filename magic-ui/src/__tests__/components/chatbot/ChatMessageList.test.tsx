@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ChatMessageList } from "../../../components/chatbot/ChatMessageList";
 import type { ChatTurn } from "../../../services/types";
 
-// Mock framer-motion
+// Mock framer-motion - strip non-boolean props to avoid DOM warnings
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => (
+    div: ({ children, layout, initial, animate, exit, ...props }: any) => (
+      <div {...props}>{children}</div>
+    ),
+    button: ({ children, layout, initial, animate, exit, ...props }: any) => (
       <button {...props}>{children}</button>
     ),
   },
@@ -43,7 +45,6 @@ describe("ChatMessageList", () => {
   it("shows TypingIndicator when assistant is empty string", () => {
     const chats: ChatTurn[] = [{ user: "Hi", assistant: "" }];
     render(<ChatMessageList chats={chats} />);
-    // The TypingIndicator renders 3 bouncing dots
     const dots = document.querySelectorAll(".rounded-full");
     expect(dots.length).toBeGreaterThanOrEqual(3);
   });
@@ -58,7 +59,6 @@ describe("ChatMessageList", () => {
 
   it("handles empty chats array", () => {
     const { container } = render(<ChatMessageList chats={[]} />);
-    // Should render the scroll container without any chat messages
     const scrollContainer = container.querySelector(".overflow-y-auto");
     expect(scrollContainer).toBeInTheDocument();
   });
@@ -79,7 +79,6 @@ describe("ChatMessageList", () => {
       },
     ];
     render(<ChatMessageList chats={chats} />);
-    // Should show the copy button
     expect(screen.getByTitle("Copy code to clipboard")).toBeInTheDocument();
     expect(screen.getByText("Copy")).toBeInTheDocument();
   });
@@ -90,23 +89,22 @@ describe("ChatMessageList", () => {
     ];
     render(<ChatMessageList chats={chats} />);
     const copyButton = screen.getByTitle("Copy code to clipboard");
-    fireEvent.click(copyButton);
+    await act(async () => {
+      fireEvent.click(copyButton);
+    });
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("const x = 1;");
   });
 
-  it("shows 'Copied!' text after clicking copy", () => {
-    // This test verifies the copy button state change.
-    // The markdown code block rendering requires rehype plugins that may not
-    // be fully available in the test environment, so we test the copy
-    // functionality directly via the clipboard mock.
+  it("shows 'Copied!' text after clicking copy", async () => {
     const chats: ChatTurn[] = [
       { user: "Write code", assistant: "```\nconst x = 1;\n```" },
     ];
     render(<ChatMessageList chats={chats} />);
     const copyButton = screen.queryByTitle("Copy code to clipboard");
-    // If the code block rendered (plugins available), test the copy state
     if (copyButton) {
-      fireEvent.click(copyButton);
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
         "const x = 1;",
       );
@@ -150,7 +148,6 @@ describe("ChatMessageList", () => {
       ".overflow-y-auto",
     ) as HTMLElement;
 
-    // Simulate scrolling up by setting scrollTop to 0
     Object.defineProperty(scrollContainer, "scrollHeight", {
       value: 1000,
       writable: true,
@@ -162,8 +159,6 @@ describe("ChatMessageList", () => {
     scrollContainer.scrollTop = 0;
 
     fireEvent.scroll(scrollContainer);
-    // The scroll-to-bottom button should appear with ChevronDown icon
-    // The button has class containing "absolute bottom-3"
     const scrollDownButton = container.querySelector(".absolute.bottom-3");
     expect(scrollDownButton).toBeInTheDocument();
   });

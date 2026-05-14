@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SidebarGlassPanel } from "../../../components/side-bar/SidebarGlassPanel";
 
-// Mock framer-motion
+// Mock framer-motion - strip non-boolean props to avoid DOM warnings
 vi.mock("framer-motion", () => ({
   motion: {
-    aside: ({ children, ...props }: any) => (
+    aside: ({ children, layout, initial, animate, exit, ...props }: any) => (
       <aside {...props}>{children}</aside>
     ),
   },

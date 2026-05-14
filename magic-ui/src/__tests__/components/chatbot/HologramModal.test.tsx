@@ -5,13 +5,27 @@ import { configureStore } from "@reduxjs/toolkit";
 import HologramModal from "../../../components/chatbot/hologram/HologramModal";
 import chatsReducer from "../../../store/chatsSlice";
 
-// Mock framer-motion
+// Mock framer-motion - strip non-boolean props to avoid DOM warnings
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => (
-      <button {...props}>{children}</button>
-    ),
+    div: ({
+      children,
+      layout,
+      layoutId,
+      initial,
+      animate,
+      exit,
+      ...props
+    }: any) => <div {...props}>{children}</div>,
+    button: ({
+      children,
+      layout,
+      layoutId,
+      initial,
+      animate,
+      exit,
+      ...props
+    }: any) => <button {...props}>{children}</button>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
@@ -30,15 +44,19 @@ vi.mock("animejs", () => ({
   stagger: vi.fn(() => 0),
 }));
 
-// Mock the hooks used by the new HologramModal
+// Track calls to hooks for assertions
+const mockInitSystem = vi.fn();
+const mockCloseAudioSystem = vi.fn();
+const mockHandleSend = vi.fn();
+
 vi.mock("../../../components/chatbot/hologram/hooks/useHologramStyles", () => ({
   useHologramStyles: vi.fn(),
 }));
 
 vi.mock("../../../components/chatbot/hologram/hooks/useAudioSystem", () => ({
   useAudioSystem: () => ({
-    initSystem: vi.fn(),
-    closeAudioSystem: vi.fn(),
+    initSystem: mockInitSystem,
+    closeAudioSystem: mockCloseAudioSystem,
     audioRef: { current: new Audio() },
     analyserRef: { current: null },
     dataArrayRef: { current: null },
@@ -47,16 +65,24 @@ vi.mock("../../../components/chatbot/hologram/hooks/useAudioSystem", () => ({
 
 vi.mock("../../../components/chatbot/hologram/hooks/useChatBot", () => ({
   useChatBot: () => ({
-    handleSend: vi.fn(),
+    handleSend: mockHandleSend,
     chatsRef: { current: [] },
   }),
 }));
+
+const mockRecognitionAbort = vi.fn();
+const mockRecognitionStop = vi.fn();
 
 vi.mock(
   "../../../components/chatbot/hologram/hooks/useSpeechRecognition",
   () => ({
     useSpeechRecognition: () => ({
-      recognitionRef: { current: null },
+      recognitionRef: {
+        current: {
+          abort: mockRecognitionAbort,
+          stop: mockRecognitionStop,
+        },
+      },
     }),
   }),
 );
@@ -81,6 +107,10 @@ function renderWithProviders(ui: React.ReactElement) {
 }
 
 describe("HologramModal", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders when isOpen is true", () => {
     renderWithProviders(<HologramModal isOpen={true} onClose={() => {}} />);
     expect(screen.getByText("INITIALIZE SYSTEM")).toBeInTheDocument();
@@ -94,9 +124,7 @@ describe("HologramModal", () => {
   it("calls onClose when close button is clicked (before audio active)", () => {
     const onClose = vi.fn();
     renderWithProviders(<HologramModal isOpen={true} onClose={onClose} />);
-    // Before audio is active, there's a close button in the overlay section
     const closeButtons = screen.getAllByRole("button");
-    // The close button is the one with the X icon (not the INITIALIZE SYSTEM overlay)
     fireEvent.click(closeButtons[0]);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -105,16 +133,12 @@ describe("HologramModal", () => {
     renderWithProviders(<HologramModal isOpen={true} onClose={() => {}} />);
     const overlay = screen.getByText("INITIALIZE SYSTEM");
     fireEvent.click(overlay);
-    // No assertion needed - initSystem is called internally via handleStateChange
-    // This test just verifies no crash
+    // initSystem is called via handleStateChange when state transitions to LISTENING
+    expect(mockInitSystem).toHaveBeenCalled();
   });
 
-  it("shows HologramControls when audio is active", () => {
-    // We need to trigger the audio active state by clicking the overlay
-    // Since useAudioSystem is mocked, initSystem won't actually set isAudioActive
-    // Instead, we test the conditional rendering paths by checking the DOM structure
+  it("shows INITIALIZE SYSTEM overlay when audio is not active", () => {
     renderWithProviders(<HologramModal isOpen={true} onClose={() => {}} />);
-    // Initially shows INITIALIZE SYSTEM
     expect(screen.getByText("INITIALIZE SYSTEM")).toBeInTheDocument();
     expect(screen.getByText("[ CLICK TO START ]")).toBeInTheDocument();
   });
@@ -123,9 +147,36 @@ describe("HologramModal", () => {
     const { container } = renderWithProviders(
       <HologramModal isOpen={true} onClose={() => {}} />,
     );
-    // The modal should have a fixed full-screen container
     const modalContainer = container.firstElementChild;
     expect(modalContainer?.className).toContain("fixed");
     expect(modalContainer?.className).toContain("inset-0");
+  });
+
+  it("calls closeAudioSystem when onClose is triggered", () => {
+    const onClose = vi.fn();
+    renderWithProviders(<HologramModal isOpen={true} onClose={onClose} />);
+    const closeButtons = screen.getAllByRole("button");
+    fireEvent.click(closeButtons[0]);
+    // closeAudioSystem should be called as part of closeModal
+    expect(mockCloseAudioSystem).toHaveBeenCalled();
+  });
+
+  it("calls recognition abort when closing modal", () => {
+    const onClose = vi.fn();
+    renderWithProviders(<HologramModal isOpen={true} onClose={onClose} />);
+    const closeButtons = screen.getAllByRole("button");
+    fireEvent.click(closeButtons[0]);
+    expect(mockRecognitionAbort).toHaveBeenCalled();
+  });
+
+  it("calls recognition stop if abort throws an error", () => {
+    mockRecognitionAbort.mockImplementationOnce(() => {
+      throw new Error("Abort failed");
+    });
+    const onClose = vi.fn();
+    renderWithProviders(<HologramModal isOpen={true} onClose={onClose} />);
+    const closeButtons = screen.getAllByRole("button");
+    fireEvent.click(closeButtons[0]);
+    expect(mockRecognitionStop).toHaveBeenCalled();
   });
 });

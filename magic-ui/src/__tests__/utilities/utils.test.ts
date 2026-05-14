@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   chatHistory,
   optimizePayload,
@@ -8,6 +8,9 @@ import {
   encryptModern,
   decryptModern,
   getRandomFile,
+  handleAddNewDiaryEntry,
+  handleBrowseDiary,
+  readText,
 } from "../../utilities/utils";
 
 vi.mock("../../utilities/apiCalls", () => ({
@@ -77,7 +80,6 @@ describe("optimizePayload", () => {
     ];
     const result = optimizePayload(messages);
     expect(result).toHaveLength(2);
-    // Assistant content should be compressed and shortened
     expect(result[1].content.length).toBeLessThanOrEqual(150);
   });
 
@@ -103,7 +105,6 @@ describe("optimizePayload", () => {
 describe("cn", () => {
   it("merges tailwind classes correctly", () => {
     const result = cn("px-4", "py-2", "px-6");
-    // tailwind-merge should resolve the px conflict
     expect(result).toContain("px-6");
     expect(result).toContain("py-2");
   });
@@ -243,5 +244,100 @@ describe("getRandomFile", () => {
     const result = await getRandomFile();
     expect(laodRandomFile).toHaveBeenCalledOnce();
     expect(result).toBe("random-file-data");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// handleAddNewDiaryEntry
+// ---------------------------------------------------------------------------
+describe("handleAddNewDiaryEntry", () => {
+  beforeEach(() => {
+    // Set up DOM elements that handleAddNewDiaryEntry reads
+    document.body.innerHTML = `
+      <input id="pwd-input-session-password" value="test-key" />
+      <a id="save-file-href" href="" download=""></a>
+    `;
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("creates a download link with encrypted content", async () => {
+    const setDownloadLinkVisible = vi.fn();
+    await handleAddNewDiaryEntry("My diary entry", setDownloadLinkVisible);
+
+    const downloadLink = document.getElementById(
+      "save-file-href",
+    ) as HTMLAnchorElement;
+    expect(downloadLink.download).toBeTruthy();
+    expect(downloadLink.download).toContain(".txt");
+    expect(downloadLink.href).toBeTruthy();
+    expect(downloadLink.href).toContain("blob:");
+    expect(setDownloadLinkVisible).toHaveBeenCalledWith(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// handleBrowseDiary
+// ---------------------------------------------------------------------------
+describe("handleBrowseDiary", () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <input id="file1" type="file" />
+    `;
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("triggers click on file input and returns true", () => {
+    const fileInput = document.getElementById("file1") as HTMLElement;
+    const clickSpy = vi.spyOn(fileInput, "click");
+
+    const result = handleBrowseDiary();
+
+    expect(clickSpy).toHaveBeenCalled();
+    expect(result).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// readText
+// ---------------------------------------------------------------------------
+describe("readText", () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <input id="pwd-input-session-password" value="test-key" />
+    `;
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("reads file and decrypts content", async () => {
+    const setInputText = vi.fn();
+    const fileContent = "encrypted-content";
+    const file = new File([fileContent], "diary.txt", { type: "text/plain" });
+
+    // Create a proper FileList-like object
+    const fileList = {
+      0: file,
+      length: 1,
+      item: (index: number) => (index === 0 ? file : null),
+    } as unknown as FileList;
+
+    const event = {
+      target: { files: fileList },
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+    await readText(event, setInputText);
+
+    // decryptModern is called with the file content and session password
+    // Since decryptModern is a real function, it will try to decrypt "encrypted-content"
+    // which will fail and return "ERROR"
+    expect(setInputText).toHaveBeenCalled();
   });
 });

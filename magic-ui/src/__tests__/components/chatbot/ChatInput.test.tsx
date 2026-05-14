@@ -13,11 +13,11 @@ vi.mock("../../../services/api", () => ({
   }),
 }));
 
-// Create a minimal store for testing
+// Create a minimal store for testing - use a valid reducer to avoid warnings
 function createMockStore() {
   return configureStore({
     reducer: {
-      // Empty reducer - ChatInput only uses useGetActiveLLMModelQuery which is mocked
+      placeholder: (state = {}) => state,
     },
   });
 }
@@ -111,7 +111,6 @@ describe("ChatInput", () => {
       />,
     );
 
-    // The cancel button should have an X icon
     expect(screen.getByRole("button")).toBeInTheDocument();
   });
 
@@ -162,5 +161,50 @@ describe("ChatInput", () => {
     await user.keyboard("{Enter}");
 
     expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it("enforces MAX_INPUT_LENGTH of 2000 characters", () => {
+    renderWithProviders(
+      <ChatInput
+        activeBot="Code Bot"
+        onSend={() => {}}
+        isFetching={false}
+        onCancel={() => {}}
+      />,
+    );
+
+    const input = screen.getByPlaceholderText(
+      "Message Code Bot...",
+    ) as HTMLInputElement;
+
+    // Use fireEvent.change for performance with large text
+    fireEvent.change(input, { target: { value: "a".repeat(2500) } });
+
+    // Input should be capped at 2000
+    expect(input.value).toHaveLength(2000);
+    expect(screen.getByText("2000/2000")).toBeInTheDocument();
+  });
+
+  it("shows amber warning color when near character limit (85%)", () => {
+    renderWithProviders(
+      <ChatInput
+        activeBot="Code Bot"
+        onSend={() => {}}
+        isFetching={false}
+        onCancel={() => {}}
+      />,
+    );
+
+    const input = screen.getByPlaceholderText(
+      "Message Code Bot...",
+    ) as HTMLInputElement;
+
+    // Use fireEvent.change for performance
+    fireEvent.change(input, { target: { value: "a".repeat(1701) } });
+
+    // The character count should show with amber-400 class
+    const charCount = screen.getByText("1701/2000");
+    expect(charCount).toBeInTheDocument();
+    expect(charCount.className).toContain("amber");
   });
 });

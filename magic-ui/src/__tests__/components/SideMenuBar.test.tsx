@@ -2,18 +2,54 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import SideMenuBar from "../../components/SideMenuBar";
 
-// Mock framer-motion
+// Mock framer-motion - strip non-boolean props to avoid DOM warnings
 vi.mock("framer-motion", () => ({
   motion: {
-    nav: ({ children, ...props }: any) => <nav {...props}>{children}</nav>,
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => (
-      <button {...props}>{children}</button>
-    ),
-    aside: ({ children, ...props }: any) => (
-      <aside {...props}>{children}</aside>
-    ),
-    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    nav: ({
+      children,
+      layout,
+      layoutId,
+      initial,
+      animate,
+      exit,
+      ...props
+    }: any) => <nav {...props}>{children}</nav>,
+    div: ({
+      children,
+      layout,
+      layoutId,
+      initial,
+      animate,
+      exit,
+      ...props
+    }: any) => <div {...props}>{children}</div>,
+    button: ({
+      children,
+      layout,
+      layoutId,
+      initial,
+      animate,
+      exit,
+      ...props
+    }: any) => <button {...props}>{children}</button>,
+    aside: ({
+      children,
+      layout,
+      layoutId,
+      initial,
+      animate,
+      exit,
+      ...props
+    }: any) => <aside {...props}>{children}</aside>,
+    span: ({
+      children,
+      layout,
+      layoutId,
+      initial,
+      animate,
+      exit,
+      ...props
+    }: any) => <span {...props}>{children}</span>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));

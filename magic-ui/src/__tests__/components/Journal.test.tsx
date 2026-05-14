@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import Journal from "../../components/Journal";
 
-// Mock framer-motion for MagicCard
+// Mock framer-motion - strip non-boolean props to avoid DOM warnings
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, layout, initial, animate, exit, ...props }: any) => (
+      <div {...props}>{children}</div>
+    ),
   },
   useMotionTemplate: (fn: any) => fn,
   useMotionValue: (initial: number) => ({

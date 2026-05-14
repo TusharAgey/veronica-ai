@@ -5,11 +5,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import Chatbot from "../../components/Chatbot";
 import chatsReducer from "../../store/chatsSlice";
 
-// Mock framer-motion
+// Mock framer-motion - strip non-boolean props to avoid DOM warnings
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => (
+    div: ({ children, layout, initial, animate, exit, ...props }: any) => (
+      <div {...props}>{children}</div>
+    ),
+    button: ({ children, layout, initial, animate, exit, ...props }: any) => (
       <button {...props}>{children}</button>
     ),
   },

@@ -5,10 +5,12 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { api } from "../../services/api";
 
-// Mock framer-motion for MagicCard
+// Mock framer-motion for MagicCard - strip non-boolean props
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, layout, initial, animate, exit, ...props }: any) => (
+      <div {...props}>{children}</div>
+    ),
   },
   useMotionTemplate: (fn: any) => fn,
   useMotionValue: (initial: number) => ({
@@ -16,6 +18,15 @@ vi.mock("framer-motion", () => ({
     set: vi.fn(),
   }),
 }));
+
+// Mock RTK Query hooks to prevent real API calls and act() warnings
+vi.mock("../../services/api", async () => {
+  const actual = await vi.importActual("../../services/api");
+  return {
+    ...actual,
+    useGetAccountsQuery: () => ({ data: [], isLoading: false }),
+  };
+});
 
 function createMockStore() {
   return configureStore({

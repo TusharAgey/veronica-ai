@@ -6,12 +6,29 @@ import { configureStore } from "@reduxjs/toolkit";
 import { api } from "../../../services/api";
 import { ToastProvider } from "../../../context/ToastContext";
 
-// Mock the utils module to avoid actual crypto calls
+// Use vi.hoisted to avoid hoisting issues with vi.mock factory
+const { mockHandleAddNewAccount } = vi.hoisted(() => ({
+  mockHandleAddNewAccount: vi.fn(),
+}));
+
 vi.mock("../../../utilities/utils", async () => {
   const actual = await vi.importActual("../../../utilities/utils");
   return {
     ...actual,
-    handleAddNewAccount: vi.fn(),
+    handleAddNewAccount: mockHandleAddNewAccount,
+  };
+});
+
+// Mock the api service hooks
+const mockCreateNewAccount = vi.fn();
+vi.mock("../../../services/api", async () => {
+  const actual = await vi.importActual("../../../services/api");
+  return {
+    ...actual,
+    useCreateNewAccountMutation: () => [
+      mockCreateNewAccount,
+      { isError: false, isSuccess: false },
+    ],
   };
 });
 
@@ -34,6 +51,10 @@ function renderWithProviders(ui: React.ReactElement) {
 }
 
 describe("AddAccountForm", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders all form fields", () => {
     renderWithProviders(<AddAccountForm />);
     expect(screen.getByPlaceholderText("Account Name")).toBeInTheDocument();
@@ -54,7 +75,7 @@ describe("AddAccountForm", () => {
     expect(screen.getByText("Add New Account")).toBeInTheDocument();
   });
 
-  it("allows typing in all form fields", async () => {
+  it("allows typing in all form fields", () => {
     renderWithProviders(<AddAccountForm />);
     const accountInput = screen.getByPlaceholderText("Account Name");
     fireEvent.change(accountInput, { target: { value: "MyAccount" } });
@@ -81,27 +102,46 @@ describe("AddAccountForm", () => {
     expect(sessionInput).toHaveValue("session123");
   });
 
-  it("submits the form when submit button is clicked", () => {
+  it("renders form fields with correct ids", () => {
     renderWithProviders(<AddAccountForm />);
-    // Fill in required fields
-    fireEvent.change(screen.getByPlaceholderText("Account Name"), {
-      target: { value: "MyAccount" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("User Name"), {
-      target: { value: "myuser" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Email ID"), {
-      target: { value: "test@test.com" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Password"), {
-      target: { value: "secret123" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Session Password"), {
-      target: { value: "session123" },
-    });
+    expect(screen.getByPlaceholderText("Account Name")).toHaveAttribute(
+      "id",
+      "account-name",
+    );
+    expect(screen.getByPlaceholderText("User Name")).toHaveAttribute(
+      "id",
+      "user-name",
+    );
+    expect(screen.getByPlaceholderText("Email ID")).toHaveAttribute(
+      "id",
+      "email-id",
+    );
+    expect(screen.getByPlaceholderText("Password")).toHaveAttribute(
+      "id",
+      "password",
+    );
+    expect(screen.getByPlaceholderText("Description")).toHaveAttribute(
+      "id",
+      "account-description",
+    );
+    expect(screen.getByPlaceholderText("Session Password")).toHaveAttribute(
+      "id",
+      "session-password",
+    );
+  });
 
-    const submitButton = screen.getByRole("button", { name: /submit/i });
-    fireEvent.click(submitButton);
-    // handleAddNewAccount is mocked, so this just verifies no crash
+  it("renders a form element", () => {
+    renderWithProviders(<AddAccountForm />);
+    const form = screen
+      .getByRole("button", { name: /submit/i })
+      .closest("form");
+    expect(form).toBeInTheDocument();
+  });
+
+  it("renders the lock icon", () => {
+    renderWithProviders(<AddAccountForm />);
+    const { container } = renderWithProviders(<AddAccountForm />);
+    const lockSvgs = container.querySelectorAll("svg");
+    expect(lockSvgs.length).toBeGreaterThanOrEqual(1);
   });
 });

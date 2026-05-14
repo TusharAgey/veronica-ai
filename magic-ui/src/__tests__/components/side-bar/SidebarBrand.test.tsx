@@ -2,11 +2,15 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SidebarBrand } from "../../../components/side-bar/SidebarBrand";
 
-// Mock framer-motion
+// Mock framer-motion - strip non-boolean props to avoid DOM warnings
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    div: ({ children, layout, initial, animate, exit, ...props }: any) => (
+      <div {...props}>{children}</div>
+    ),
+    span: ({ children, layout, initial, animate, exit, ...props }: any) => (
+      <span {...props}>{children}</span>
+    ),
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));

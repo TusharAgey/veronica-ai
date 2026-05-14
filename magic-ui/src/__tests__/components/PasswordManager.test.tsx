@@ -16,6 +16,17 @@ vi.mock("../../utilities/utils", async () => {
   };
 });
 
+// Mock RTK Query hooks to prevent real API calls and act() warnings
+vi.mock("../../services/api", async () => {
+  const actual = await vi.importActual("../../services/api");
+  return {
+    ...actual,
+    useGetAccountsQuery: () => ({ data: [], isLoading: false }),
+    useGetAccountDetailsQuery: () => ({ data: null, isLoading: false }),
+    useCreateNewAccountMutation: () => [vi.fn(), { isLoading: false }],
+  };
+});
+
 function createMockStore() {
   return configureStore({
     reducer: {
