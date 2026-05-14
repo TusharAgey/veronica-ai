@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import App from "../App";
@@ -31,6 +31,86 @@ vi.mock("framer-motion", () => ({
     get: () => _initial,
     set: vi.fn(),
   }),
+}));
+
+// Mock all lazy-loaded view components so they render synchronously in tests
+vi.mock("../components/SideMenuBar", () => ({
+  default: ({ activeTab, setActiveTab, isCollapsed }: any) => {
+    const NAV_ITEMS = [
+      { id: "dashboard", label: "Dashboard" },
+      { id: "passwords", label: "Passwords" },
+      { id: "journal", label: "Journal" },
+      { id: "chatbot", label: "Chatbot" },
+      { id: "hologram", label: "Hologram" },
+    ];
+    return React.createElement(
+      "div",
+      null,
+      NAV_ITEMS.map((item: any) =>
+        React.createElement(
+          "button",
+          {
+            key: item.id,
+            title: item.label,
+            "data-testid": `nav-${item.id}`,
+            onClick: () => setActiveTab(item.id),
+          },
+          item.label,
+        ),
+      ),
+    );
+  },
+}));
+
+vi.mock("../components/Dashboard", () => ({
+  default: () => React.createElement("div", null, "AI Bots"),
+}));
+
+vi.mock("../components/PasswordManager", () => ({
+  default: () =>
+    React.createElement(
+      "div",
+      null,
+      React.createElement("div", null, "Add New Account"),
+      React.createElement("div", null, "Browse Password"),
+      React.createElement("div", null, "Total Saved"),
+    ),
+}));
+
+vi.mock("../components/Journal", () => ({
+  default: () =>
+    React.createElement("div", null, [
+      React.createElement("textarea", {
+        key: "journal-input",
+        placeholder: "What's on your mind today?",
+      }),
+    ]),
+}));
+
+vi.mock("../components/Chatbot", () => ({
+  default: () =>
+    React.createElement("div", null, [
+      React.createElement("input", {
+        key: "chat-input",
+        placeholder: "Message Code Bot...",
+      }),
+    ]),
+}));
+
+// Mock the hologram modal for the hologram tab test
+vi.mock("../components/chatbot/hologram/HologramModal", () => ({
+  default: ({ isOpen, onClose }: any) =>
+    isOpen
+      ? React.createElement(
+          "div",
+          { "data-testid": "hologram-modal" },
+          "Hologram Modal",
+          React.createElement("button", {
+            "data-testid": "hologram-close",
+            onClick: onClose,
+          }),
+        )
+      : null,
 }));
 
 // Mock the api services to prevent real HTTP calls
@@ -84,14 +164,15 @@ function renderWithProviders(ui: React.ReactElement) {
 }
 
 describe("App", () => {
-  it("renders the sidebar with navigation items (collapsed by default)", () => {
+  it("renders the sidebar with navigation items (collapsed by default)", async () => {
     renderWithProviders(<App />);
     // Sidebar starts collapsed, so nav items show as icon-only with title attributes
-    expect(screen.getByTitle("Dashboard")).toBeInTheDocument();
-    expect(screen.getByTitle("Passwords")).toBeInTheDocument();
-    expect(screen.getByTitle("Journal")).toBeInTheDocument();
-    expect(screen.getByTitle("Chatbot")).toBeInTheDocument();
-    expect(screen.getByTitle("Hologram")).toBeInTheDocument();
+    // Use findBy queries to wait for lazy-loaded components to resolve
+    expect(await screen.findByTitle("Dashboard")).toBeInTheDocument();
+    expect(await screen.findByTitle("Passwords")).toBeInTheDocument();
+    expect(await screen.findByTitle("Journal")).toBeInTheDocument();
+    expect(await screen.findByTitle("Chatbot")).toBeInTheDocument();
+    expect(await screen.findByTitle("Hologram")).toBeInTheDocument();
   });
 
   it("renders the SpatialEnvironment background", () => {
@@ -105,30 +186,49 @@ describe("App", () => {
     expect(screen.getByText(/Good/)).toBeInTheDocument();
   });
 
-  it("shows Dashboard by default", () => {
+  it("shows Dashboard by default", async () => {
     renderWithProviders(<App />);
-    expect(screen.getByText("AI Bots")).toBeInTheDocument();
+    expect(await screen.findByText("AI Bots")).toBeInTheDocument();
   });
 
-  it("switches to Passwords tab when clicked", () => {
+  it("switches to Passwords tab when clicked", async () => {
     renderWithProviders(<App />);
-    fireEvent.click(screen.getByTitle("Passwords"));
-    expect(screen.getByText("Add New Account")).toBeInTheDocument();
+    fireEvent.click(await screen.findByTitle("Passwords"));
+    expect(await screen.findByText("Add New Account")).toBeInTheDocument();
   });
 
-  it("switches to Journal tab when clicked", () => {
+  it("switches to Journal tab when clicked", async () => {
     renderWithProviders(<App />);
-    fireEvent.click(screen.getByTitle("Journal"));
+    fireEvent.click(await screen.findByTitle("Journal"));
     expect(
-      screen.getByPlaceholderText("What's on your mind today?"),
+      await screen.findByPlaceholderText("What's on your mind today?"),
     ).toBeInTheDocument();
   });
 
-  it("switches to Chatbot tab when clicked", () => {
+  it("switches to Chatbot tab when clicked", async () => {
     renderWithProviders(<App />);
-    fireEvent.click(screen.getByTitle("Chatbot"));
+    fireEvent.click(await screen.findByTitle("Chatbot"));
     expect(
-      screen.getByPlaceholderText("Message Code Bot..."),
+      await screen.findByPlaceholderText("Message Code Bot..."),
+    ).toBeInTheDocument();
+  });
+
+  it("switches to Hologram tab when clicked", async () => {
+    renderWithProviders(<App />);
+    fireEvent.click(await screen.findByTitle("Hologram"));
+    expect(await screen.findByTestId("hologram-modal")).toBeInTheDocument();
+  });
+
+  it("closes Hologram modal and returns to Chatbot tab", async () => {
+    renderWithProviders(<App />);
+    fireEvent.click(await screen.findByTitle("Hologram"));
+    expect(await screen.findByTestId("hologram-modal")).toBeInTheDocument();
+
+    // Click the close button inside the hologram modal
+    fireEvent.click(screen.getByTestId("hologram-close"));
+    // Should switch back to chatbot view
+    expect(
+      await screen.findByPlaceholderText("Message Code Bot..."),
     ).toBeInTheDocument();
   });
 });

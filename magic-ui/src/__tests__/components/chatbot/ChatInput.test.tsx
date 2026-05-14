@@ -4,16 +4,21 @@ import userEvent from "@testing-library/user-event";
 import { ChatInput } from "../../../components/chatbot/ChatInput";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import { llama } from "../../../services/api";
+
+// Mock the api service to prevent real HTTP calls from useGetActiveLLMModelQuery
+vi.mock("../../../services/api", () => ({
+  useGetActiveLLMModelQuery: () => ({
+    data: { models: [{ name: "test-model" }] },
+    isLoading: false,
+  }),
+}));
 
 // Create a minimal store for testing
 function createMockStore() {
   return configureStore({
     reducer: {
-      [llama.reducerPath]: llama.reducer,
+      // Empty reducer - ChatInput only uses useGetActiveLLMModelQuery which is mocked
     },
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(llama.middleware),
   });
 }
 
