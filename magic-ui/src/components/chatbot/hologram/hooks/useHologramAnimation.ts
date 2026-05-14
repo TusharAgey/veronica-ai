@@ -25,6 +25,7 @@ export const useHologramAnimation = ({
   const blobAnimations = useRef<anime.AnimeInstance[]>([]);
   const animationFrameRef = useRef<number>(0);
   const lastRingPulseState = useRef<AppState | null>(null);
+  const ringPulseAnimRef = useRef<anime.AnimeInstance | null>(null);
 
   useEffect(() => {
     if (!isOpen || !mountRef || !mountRef.current || !isAudioActive) return;
@@ -439,13 +440,12 @@ export const useHologramAnimation = ({
       });
     }
 
-    let ringPulseAnim: anime.AnimeInstance | null = null;
     function startRingPulse(color: string) {
       container.querySelectorAll(".hologram-outer-ring").forEach((ring) => {
         (ring as HTMLElement).style.borderColor = color;
       });
-      if (ringPulseAnim) ringPulseAnim.pause();
-      ringPulseAnim = anime({
+      if (ringPulseAnimRef.current) ringPulseAnimRef.current.pause();
+      ringPulseAnimRef.current = anime({
         targets: ".hologram-outer-ring",
         scale: [0.9, 2.4],
         opacity: [0.15, 0],
@@ -547,6 +547,10 @@ export const useHologramAnimation = ({
     return () => {
       cancelAnimationFrame(animationFrameRef.current);
       window.removeEventListener("resize", handleResize);
+      if (ringPulseAnimRef.current) {
+        ringPulseAnimRef.current.pause();
+        ringPulseAnimRef.current = null;
+      }
       blobAnimations.current.forEach((anim) => {
         if (anim) anim.pause();
       });
