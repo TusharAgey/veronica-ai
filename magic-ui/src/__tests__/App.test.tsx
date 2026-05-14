@@ -1,11 +1,15 @@
-import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import App from "../App";
 import chatsReducer from "../store/chatsSlice";
 import { ToastProvider } from "../context/ToastContext";
+
+const { React } = vi.hoisted(() => {
+  // @ts-ignore
+  return { React: require("react") };
+});
 
 // Mock framer-motion - strip out framer-motion specific props to avoid DOM warnings
 function createMotionComponent(Tag: string) {
@@ -43,7 +47,7 @@ vi.mock("framer-motion", () => ({
 // Mock all lazy-loaded view components so they render synchronously in tests
 const mockSetActiveTab = vi.fn();
 vi.mock("../components/SideMenuBar", () => ({
-  default: ({ activeTab, setActiveTab, isCollapsed }: any) => {
+  default: ({ setActiveTab }: any) => {
     // Store setActiveTab for assertions
     mockSetActiveTab.mockImplementation(setActiveTab);
     const NAV_ITEMS = [
