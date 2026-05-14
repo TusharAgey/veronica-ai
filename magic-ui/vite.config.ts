@@ -68,6 +68,12 @@ export default defineConfig({
               minSize: 0,
             },
             {
+              name: "vendor-animation",
+              test: /node_modules[\\/]anime/,
+              priority: 10,
+              minSize: 0,
+            },
+            {
               name: "vendor-markdown",
               test: /node_modules[\\/](react-markdown|rehype-highlight|rehype-raw|remark-gfm)/,
               priority: 10,
