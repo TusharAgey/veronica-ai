@@ -1,6 +1,7 @@
+/// <reference types="vitest" />
 import path from "path";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import dns from "dns";
 import http from "http";
@@ -50,38 +51,56 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             {
-              name: "vendor",
-              test: /node_modules[\\/](react|react-dom|react-redux|@reduxjs\/toolkit)/,
-              priority: 10,
+              name: "vendor-react-dom",
+              test: /node_modules[\/](react-dom|scheduler)/,
+              priority: 21,
+              minSize: 0,
+            },
+            {
+              name: "vendor-react",
+              test: /node_modules[\/]react/,
+              priority: 20,
+              minSize: 0,
+            },
+            {
+              name: "vendor-redux",
+              test: /node_modules[\/](react-redux|@reduxjs\/toolkit|immer|redux|reselect)/,
+              priority: 15,
+              minSize: 0,
+            },
+            {
+              name: "vendor-rehype-highlight",
+              test: /node_modules[\/](rehype-highlight|lowlight|highlight\.js|hast-util-to-text|hast-util-is-element|unist-util-find-after)/,
+              priority: 14,
               minSize: 0,
             },
             {
               name: "vendor-animation",
-              test: /node_modules[\\/]framer-motion/,
+              test: /node_modules[\/]framer-motion/,
               priority: 10,
               minSize: 0,
             },
             {
               name: "vendor-three",
-              test: /node_modules[\\/]three/,
+              test: /node_modules[\/]three/,
               priority: 10,
               minSize: 0,
             },
             {
               name: "vendor-animation",
-              test: /node_modules[\\/]anime/,
+              test: /node_modules[\/]anime/,
               priority: 10,
               minSize: 0,
             },
             {
               name: "vendor-markdown",
-              test: /node_modules[\\/](react-markdown|rehype-highlight|rehype-raw|remark-gfm)/,
+              test: /node_modules[\/](react-markdown|rehype-raw|remark-gfm)/,
               priority: 10,
               minSize: 0,
             },
             {
               name: "vendor-icons",
-              test: /node_modules[\\/]lucide-react/,
+              test: /node_modules[\/]lucide-react/,
               priority: 10,
               minSize: 0,
             },
@@ -89,5 +108,11 @@ export default defineConfig({
         },
       },
     },
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.ts",
+    css: true,
   },
 });

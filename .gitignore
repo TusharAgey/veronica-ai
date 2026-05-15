@@ -150,3 +150,6 @@ ui/src/wave/index.html
 ui/src/wave/siriWave.js
 .gitignore
 ui/src/wave/wave-single.html
+
+# Vitest coverage output
+magic-ui/coverage/
