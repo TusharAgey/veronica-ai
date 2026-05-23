@@ -35,10 +35,10 @@ export const useHologramAnimation = ({
     blobAnimations.current = [];
 
     const orbData = [
-      { id: "bottom", angle: 0 },
-      { id: "top", angle: Math.PI },
-      { id: "left", angle: -Math.PI / 2 },
-      { id: "right", angle: Math.PI / 2 },
+      { id: "top", rotation: 180 },
+      { id: "right", rotation: -90 },
+      { id: "bottom", rotation: 0 },
+      { id: "left", rotation: 90 },
     ];
 
     const orbElements: HTMLDivElement[] = [];
@@ -50,7 +50,7 @@ export const useHologramAnimation = ({
       phaseOffset: number;
     }[] = [];
 
-    orbData.forEach((_, orbIndex) => {
+    orbData.forEach(({ rotation }, orbIndex) => {
       const orbContainer = document.createElement("div");
       orbContainer.className = "hologram-orb-container";
       orbContainer.style.transform = "scale(0)";
@@ -80,6 +80,7 @@ export const useHologramAnimation = ({
       const waveContainer = document.createElement("div");
       waveContainer.className = "hologram-wave-container";
       waveContainer.id = `wave-container-${orbIndex}`;
+      waveContainer.style.transform = `rotate(${rotation}deg)`;
 
       const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS, "svg");
