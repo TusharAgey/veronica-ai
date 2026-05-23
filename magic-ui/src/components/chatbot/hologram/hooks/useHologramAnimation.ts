@@ -393,20 +393,20 @@ export const useHologramAnimation = ({
 
           switch (i) {
             case 0:
-              orb.style.left = `${w / 2 - distanceX}px`;
+              orb.style.left = `${w / 2}px`;
               orb.style.top = `${h / 2 - distanceY}px`;
               break;
             case 1:
               orb.style.left = `${w / 2 + distanceX}px`;
-              orb.style.top = `${h / 2 - distanceY}px`;
+              orb.style.top = `${h / 2}px`;
               break;
             case 2:
-              orb.style.left = `${w / 2 - distanceX}px`;
+              orb.style.left = `${w / 2}px`;
               orb.style.top = `${h / 2 + distanceY}px`;
               break;
             case 3:
-              orb.style.left = `${w / 2 + distanceX}px`;
-              orb.style.top = `${h / 2 + distanceY}px`;
+              orb.style.left = `${w / 2 - distanceX}px`;
+              orb.style.top = `${h / 2}px`;
               break;
           }
           orb.style.transform = "translate(-50%, -50%)";
