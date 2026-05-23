@@ -391,33 +391,24 @@ export const useHologramAnimation = ({
             orb.querySelector(".hologram-orb-core") as HTMLElement
           ).style.height = coreSize + "px";
 
-          const safePadding = orbSize * 0.85;
-          const distanceX = Math.min(
-            w * 0.25,
-            Math.max(0, w / 2 - safePadding),
-            350,
-          );
-          const distanceY = Math.min(
-            h * 0.25,
-            Math.max(0, h / 2 - safePadding),
-            350,
-          );
+          const cornerPadding = Math.max(50, orbSize * 0.5);
+          const edgeOffset = orbSize / 2 + cornerPadding;
 
           switch (i) {
             case 0:
               orb.style.left = `${w / 2}px`;
-              orb.style.top = `${h / 2 - distanceY}px`;
+              orb.style.top = `${edgeOffset}px`;
               break;
             case 1:
-              orb.style.left = `${w / 2 + distanceX}px`;
+              orb.style.left = `${w - edgeOffset}px`;
               orb.style.top = `${h / 2}px`;
               break;
             case 2:
               orb.style.left = `${w / 2}px`;
-              orb.style.top = `${h / 2 + distanceY}px`;
+              orb.style.top = `${h - edgeOffset}px`;
               break;
             case 3:
-              orb.style.left = `${w / 2 - distanceX}px`;
+              orb.style.left = `${edgeOffset}px`;
               orb.style.top = `${h / 2}px`;
               break;
           }
