@@ -42,6 +42,7 @@ export const useHologramAnimation = ({
     ];
 
     const orbElements: HTMLDivElement[] = [];
+    const waveContainers: HTMLElement[] = [];
     const allWavePaths: {
       els: Element[];
       freq: number;
@@ -81,6 +82,7 @@ export const useHologramAnimation = ({
       waveContainer.className = "hologram-wave-container";
       waveContainer.id = `wave-container-${orbIndex}`;
       waveContainer.style.transform = `rotate(${rotation}deg)`;
+      waveContainers.push(waveContainer);
 
       const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS, "svg");
@@ -348,7 +350,8 @@ export const useHologramAnimation = ({
             orb.style.height = singleSize + "px";
             orb.style.left = `${w / 2}px`;
             orb.style.top = `${h / 2}px`;
-            orb.style.transform = "translate(-50%, -50%)";
+            orb.style.transform =
+              "translate(-50%, -50%) scale(var(--orb-scale, 1))";
             const blobSize = singleSize * 0.6;
             orb.querySelectorAll(".hologram-blob").forEach((b) => {
               (b as HTMLElement).style.width = blobSize + "px";
@@ -410,7 +413,8 @@ export const useHologramAnimation = ({
               orb.style.top = `${h / 2}px`;
               break;
           }
-          orb.style.transform = "translate(-50%, -50%)";
+          orb.style.transform =
+            "translate(-50%, -50%) scale(var(--orb-scale, 1))";
         }
       });
     };
@@ -457,7 +461,15 @@ export const useHologramAnimation = ({
       });
     }
 
+    const setWaveOpacity = (opacity: string) => {
+      waveContainers.forEach((wc) => {
+        wc.style.opacity = opacity;
+      });
+    };
+
     let currentVol = 0;
+    let lastScale = 1;
+    let lastVisualState: AppState | null = null;
     const renderLoop = () => {
       animationFrameRef.current = requestAnimationFrame(renderLoop);
       const s = stateRef.current;
@@ -485,57 +497,42 @@ export const useHologramAnimation = ({
 
       currentVol += (targetVol - currentVol) * 0.1;
       const scale = 1.0 + currentVol * 0.3;
-      orbElements.forEach((orb) => {
-        orb.style.transform = `translate(-50%, -50%) scale(${scale})`;
-      });
+      if (Math.abs(scale - lastScale) > 0.005) {
+        orbElements.forEach((orb) => {
+          orb.style.setProperty("--orb-scale", String(scale));
+        });
+        lastScale = scale;
+      }
 
-      if (s === "IDLE") {
-        lastRingPulseState.current = null;
-        targetWaveAmp = 3;
-        waveSpeedMulti = 0.4;
-        orbElements.forEach((orb) => {
-          const wc = orb.querySelector(
-            ".hologram-wave-container",
-          ) as HTMLElement;
-          if (wc) wc.style.opacity = "0.4";
-        });
-      } else if (s === "LISTENING") {
-        targetWaveAmp = 12;
-        waveSpeedMulti = 1.2;
-        orbElements.forEach((orb) => {
-          const wc = orb.querySelector(
-            ".hologram-wave-container",
-          ) as HTMLElement;
-          if (wc) wc.style.opacity = "1";
-        });
-        if (lastRingPulseState.current !== "LISTENING") {
+      if (s !== lastVisualState) {
+        if (s === "IDLE") {
+          lastRingPulseState.current = null;
+          targetWaveAmp = 3;
+          waveSpeedMulti = 0.4;
+          setWaveOpacity("0.4");
+        } else if (s === "LISTENING") {
+          targetWaveAmp = 12;
+          waveSpeedMulti = 1.2;
+          setWaveOpacity("1");
           startRingPulse("rgba(0, 242, 254, 0.3)");
           lastRingPulseState.current = "LISTENING";
-        }
-      } else if (s === "THINKING") {
-        lastRingPulseState.current = null;
-        targetWaveAmp = 8;
-        waveSpeedMulti = 2.5;
-        orbElements.forEach((orb) => {
-          const wc = orb.querySelector(
-            ".hologram-wave-container",
-          ) as HTMLElement;
-          if (wc) wc.style.opacity = "0.8";
-        });
-      } else if (s === "SPEAKING") {
-        const avg = micVol * 50;
-        targetWaveAmp = 5 + (avg / 255) * 50;
-        waveSpeedMulti = 1 + (avg / 255) * 3;
-        orbElements.forEach((orb) => {
-          const wc = orb.querySelector(
-            ".hologram-wave-container",
-          ) as HTMLElement;
-          if (wc) wc.style.opacity = "1";
-        });
-        if (lastRingPulseState.current !== "SPEAKING") {
+        } else if (s === "THINKING") {
+          lastRingPulseState.current = null;
+          targetWaveAmp = 8;
+          waveSpeedMulti = 2.5;
+          setWaveOpacity("0.8");
+        } else if (s === "SPEAKING") {
+          setWaveOpacity("1");
           startRingPulse("rgba(99, 102, 241, 0.3)");
           lastRingPulseState.current = "SPEAKING";
         }
+        lastVisualState = s;
+      }
+
+      if (s === "SPEAKING") {
+        const avg = micVol * 50;
+        targetWaveAmp = 5 + (avg / 255) * 50;
+        waveSpeedMulti = 1 + (avg / 255) * 3;
       }
 
       renderWaveLoop();
