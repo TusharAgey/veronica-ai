@@ -21,7 +21,7 @@ export const HologramControls: React.FC<HologramControlsProps> = ({
     >
       <button
         onClick={toggleSingleOrb}
-        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+        className="w-4 h-4 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
         title={
           singleOrbMode ? "Switch to 4-orb mode" : "Switch to single-orb mode"
         }
@@ -63,7 +63,7 @@ export const HologramControls: React.FC<HologramControlsProps> = ({
 
       <button
         onClick={closeModal}
-        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+        className="w-4 h-4 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

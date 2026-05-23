@@ -42,6 +42,7 @@ export const useHologramAnimation = ({
     ];
 
     const orbElements: HTMLDivElement[] = [];
+    const orbVisualElements: HTMLDivElement[] = [];
     const waveContainers: HTMLElement[] = [];
     const allWavePaths: {
       els: Element[];
@@ -54,7 +55,12 @@ export const useHologramAnimation = ({
     orbData.forEach(({ rotation }, orbIndex) => {
       const orbContainer = document.createElement("div");
       orbContainer.className = "hologram-orb-container";
-      orbContainer.style.transform = "scale(0)";
+      orbContainer.style.transform =
+        "translate(-50%, -50%) scale(var(--orb-scale, 1))";
+
+      const orbVisual = document.createElement("div");
+      orbVisual.className = "hologram-orb-visual";
+      orbVisual.style.transform = "scale(0)";
 
       const outerRingsDiv = document.createElement("div");
       outerRingsDiv.className = "hologram-outer-rings";
@@ -66,16 +72,16 @@ export const useHologramAnimation = ({
         ring.style.cssText = "width:100%;height:100%;";
         outerRingsDiv.appendChild(ring);
       }
-      orbContainer.appendChild(outerRingsDiv);
+      orbVisual.appendChild(outerRingsDiv);
 
       const core = document.createElement("div");
       core.className = "hologram-orb-core";
-      orbContainer.appendChild(core);
+      orbVisual.appendChild(core);
 
       for (let i = 1; i <= 4; i++) {
         const blob = document.createElement("div");
         blob.className = `hologram-blob hologram-blob-${i}`;
-        orbContainer.appendChild(blob);
+        orbVisual.appendChild(blob);
       }
 
       const waveContainer = document.createElement("div");
@@ -193,10 +199,12 @@ export const useHologramAnimation = ({
       });
 
       waveContainer.appendChild(svg);
-      orbContainer.appendChild(waveContainer);
+      orbVisual.appendChild(waveContainer);
+      orbContainer.appendChild(orbVisual);
 
       container.appendChild(orbContainer);
       orbElements.push(orbContainer);
+      orbVisualElements.push(orbVisual);
       orbRefs.current.push(orbContainer);
     });
 
@@ -289,7 +297,7 @@ export const useHologramAnimation = ({
 
     entranceTimeline
       .add({
-        targets: orbElements,
+        targets: orbVisualElements,
         scale: [0, 1],
         rotate: ["-90deg", "0deg"],
         duration: 2000,

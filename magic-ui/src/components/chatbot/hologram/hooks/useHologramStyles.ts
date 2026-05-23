@@ -9,6 +9,7 @@ export const useHologramStyles = () => {
     style.id = styleId;
     style.textContent = `
       .hologram-orb-container { position: absolute; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; border-radius: 50%; z-index: 10; pointer-events: none; }
+      .hologram-orb-visual { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; border-radius: 50%; transform-origin: center; will-change: transform; }
       .hologram-orb-core { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 60%); z-index: 5; mix-blend-mode: overlay; }
       .hologram-blob { position: absolute; width: 60%; height: 60%; border-radius: 50%; filter: blur(25px); mix-blend-mode: screen; opacity: 0.8; will-change: transform, border-radius; }
       .hologram-blob-1 { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); }
