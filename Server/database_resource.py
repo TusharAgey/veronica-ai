@@ -38,7 +38,8 @@ def getPasswordTableV2(metadata_obj):
         Column('USERNAME', String(64)),
         Column('PASSWORD', String(512)),
         Column('EMAIL', String(64)),
-        Column('CREATION_DATE', DateTime)
+        Column('CREATION_DATE', DateTime),
+        Column('DELETED_AT', DateTime)
     );
     return USER_PASSWORDS_TABLE
 

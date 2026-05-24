@@ -31,6 +31,7 @@ class UserPasswordV2(Base):
     password =               Column(String(512))
     email =                  Column(String(64))
     creation_date =          Column(DateTime)
+    deleted_at =             Column(DateTime)
 
     def __repr__(self):
-       return f"UserPassword(id={self.id!r}, email={self.email}, account_name={self.account_name!r}, account_description={self.account_description!r}, username={self.username!r},password={self.password!r},creation_date={self.creation_date!r})"
+       return f"UserPassword(id={self.id!r}, email={self.email}, account_name={self.account_name!r}, account_description={self.account_description!r}, username={self.username!r},password={self.password!r},creation_date={self.creation_date!r},deleted_at={self.deleted_at!r})"

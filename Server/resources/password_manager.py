@@ -1,11 +1,13 @@
 from flask import Blueprint
 from flask import request
 from markupsafe import escape
-from sqlalchemy import insert, select, MetaData
+from sqlalchemy import insert, select, MetaData, update
 from database_resource import getDatabaseEngine, getPasswordTable, getPasswordTableV2
 from domain.UserPassword import UserPassword, UserPasswordV2
 from datetime import date
 from flask_cors import cross_origin
+from datetime import datetime, UTC
+from flask import jsonify
 
 password_manager = Blueprint('password_manager', __name__)
 
@@ -53,12 +55,49 @@ def newPasswordV2():
     )
     engine = getDatabaseEngine();
     response = "{\"status\": \"Succesfull\"}"
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         try:
             conn.execute(stmt)
         except:
             response = "{\"error\": \"Could not add new entry. Sorry!\"}"
 
+    return response
+
+###
+## APIs to mark an account deleted by setting deleted at and updating account name to have accountname__deleted__datetime notation.
+###
+@password_manager.route("/v2/password-manager/<accountName>", methods=['DELETE'])
+def deleteAccount(accountName):
+    deleted_at = datetime.now(UTC)
+    deleted_name = (
+        f"{accountName}__deleted__"
+        f"{deleted_at.strftime('%Y%m%d_%H%M%S')}"
+    )
+
+    PASSWORD_TABLE = getPasswordTableV2(MetaData())
+    
+    stmt = (
+        update(PASSWORD_TABLE)
+        .where(
+            PASSWORD_TABLE.c.ACCOUNT_NAME == accountName
+        )
+        .values(
+            ACCOUNT_NAME = deleted_name,
+            DELETED_AT = deleted_at
+        )
+    )
+    engine = getDatabaseEngine()
+
+    response = jsonify({
+        "status": "Successful"
+    })
+    with engine.begin() as conn:
+        try:
+            conn.execute(stmt)
+        except Exception as e:
+            return jsonify({
+                "error": str(e)
+            }), 500  
     return response
 
 ###
