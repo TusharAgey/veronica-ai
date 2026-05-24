@@ -1,23 +1,42 @@
 import { useEffect, useState } from "react";
 import { MagicCard } from "../ui/MagicCard";
 import { GlassInput, GlassSelect } from "../ui/GlassInput";
-import { Eye, EyeOff } from "lucide-react"; // Assuming you have lucide-react or similar for the eye icon
-import { useGetAccountDetailsQuery, useGetAccountsQuery } from "@/services/api";
+import { Eye, EyeOff, Trash2 } from "lucide-react"; // Assuming you have lucide-react or similar for the eye icon
+import {
+  useGetAccountDetailsQuery,
+  useGetAccountsQuery,
+  useDeleteAccountMutation,
+} from "@/services/api";
 import { decryptModern } from "../../utilities/utils";
+import { useToast } from "../../context/ToastContext";
 
 export function BrowsePassword() {
   const { data: accounts = [] } = useGetAccountsQuery();
-  const [selectedAccount, setSelectedAccount] =
-    useState<string>("Select account...");
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
 
-  const { data: accountDetails } = useGetAccountDetailsQuery(selectedAccount, {
-    skip: !selectedAccount || selectedAccount === "Select account...",
-  });
+  const { currentData: accountDetails } = useGetAccountDetailsQuery(
+    selectedAccount!,
+    { skip: !selectedAccount },
+  );
   const [sessionPasword, setSessionPassword] = useState<string>("");
   const [isRevealed, setIsRevealed] = useState<boolean>(false);
-
+  const [deleteAccount, { isError, isSuccess }] = useDeleteAccountMutation();
   const [decryptedPassword, setDecryptedPassword] =
     useState<string>("***********");
+
+  const { error: errorToast, success: successToast } = useToast();
+
+  useEffect(() => {
+    if (isError) {
+      errorToast("Failed to delete the account. Perhapse, the server is down");
+    }
+  }, [isError, errorToast]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      successToast("Succesfully Deleted the account!");
+    }
+  }, [isSuccess, successToast]);
 
   useEffect(() => {
     if (
@@ -50,12 +69,14 @@ export function BrowsePassword() {
       <h2 className="text-xl font-semibold text-white mb-6">Browse Password</h2>
       <div className="space-y-5">
         <GlassSelect
-          value={selectedAccount}
+          value={selectedAccount!}
           onChange={(e) => {
             setSelectedAccount(e.target.value);
           }}
         >
-          <option className="bg-[#0f0f1a]">Select account...</option>
+          <option className="bg-[#0f0f1a]" value="">
+            Select account...
+          </option>
           {accounts.map((account, idx) => (
             <option key={`${account}-${idx}`} value={account}>
               {account}
@@ -118,6 +139,24 @@ export function BrowsePassword() {
               <span className="font-normal">Creation Date:</span>{" "}
               {accountDetails.creation_date}
             </p>
+            {selectedAccount !== "Select account..." && (
+              <button
+                disabled={selectedAccount === "Select account..."}
+                onClick={() => {
+                  const confirmed = window.confirm(
+                    `Delete account "${selectedAccount}"?\n\nThis can be restored later.`,
+                  );
+                  if (confirmed) {
+                    deleteAccount(selectedAccount!).then(() => {
+                      setSelectedAccount(null);
+                    });
+                  }
+                }}
+                className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-red-300"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
           </div>
         )}
       </div>

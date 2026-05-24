@@ -14,7 +14,7 @@ export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: PYTHON_SERVER_HOST_PORT,
   }),
-  tagTypes: ["Accounts"],
+  tagTypes: ["Accounts", "AccountDetails"],
 
   endpoints: (builder) => ({
     // 1. Get accounts list
@@ -30,6 +30,7 @@ export const api = createApi({
       query: (accountName) => ({
         url: "/v2/password-manager/user/" + accountName,
       }),
+      providesTags: ["AccountDetails"],
     }),
 
     // 3. Create new account
@@ -40,6 +41,15 @@ export const api = createApi({
         body: newAccountDetails,
       }),
       invalidatesTags: ["Accounts"],
+    }),
+
+    // 3. Delete an account
+    deleteAccount: builder.mutation<void, string>({
+      query: (accountName) => ({
+        url: `/v2/password-manager/${encodeURIComponent(accountName)}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Accounts", "AccountDetails"],
     }),
   }),
 });
@@ -64,6 +74,7 @@ export const {
   useGetAccountsQuery,
   useGetAccountDetailsQuery,
   useCreateNewAccountMutation,
+  useDeleteAccountMutation,
 } = api;
 
 export const { useGetActiveLLMModelQuery } = llama;
