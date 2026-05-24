@@ -20,8 +20,11 @@ export const api = createApi({
     // 1. Get accounts list
     getAccounts: builder.query<string[], void>({
       query: () => "/v2/password-manager/user/accounts",
-      transformResponse: (response: { accounts: string[] }) =>
-        response.accounts,
+      transformResponse: (response: { accounts: string[] }) => {
+        const accounts = response.accounts;
+        accounts.sort();
+        return accounts;
+      }, // Sort accounts alphabetically before returning
       providesTags: ["Accounts"],
     }),
 
@@ -43,7 +46,7 @@ export const api = createApi({
       invalidatesTags: ["Accounts"],
     }),
 
-    // 3. Delete an account
+    // 4. Delete an account
     deleteAccount: builder.mutation<void, string>({
       query: (accountName) => ({
         url: `/v2/password-manager/${encodeURIComponent(accountName)}`,

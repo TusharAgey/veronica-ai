@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { Eye, EyeOff, Trash2 } from "lucide-react"; // Assuming you have lucide-react or similar for the eye icon
 import { MagicCard } from "../ui/MagicCard";
 import { GlassInput, GlassSelect } from "../ui/GlassInput";
-import { Eye, EyeOff, Trash2 } from "lucide-react"; // Assuming you have lucide-react or similar for the eye icon
 import {
   useGetAccountDetailsQuery,
   useGetAccountsQuery,
@@ -12,7 +12,7 @@ import { useToast } from "../../context/ToastContext";
 
 export function BrowsePassword() {
   const { data: accounts = [] } = useGetAccountsQuery();
-  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState("");
 
   const { currentData: accountDetails } = useGetAccountDetailsQuery(
     selectedAccount!,
@@ -148,7 +148,7 @@ export function BrowsePassword() {
                   );
                   if (confirmed) {
                     deleteAccount(selectedAccount!).then(() => {
-                      setSelectedAccount(null);
+                      setSelectedAccount("");
                     });
                   }
                 }}
