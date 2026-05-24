@@ -158,7 +158,7 @@ def getAllAccounts():
 @password_manager.route("/v2/password-manager/user/accounts")
 @cross_origin(supports_credentials=True)
 def getAllAccountsV2():
-    stmt = select(UserPasswordV2.account_name)
+    stmt = select(UserPasswordV2.account_name).where(UserPasswordV2.deleted_at == None) # Only fetch accounts which are not marked deleted.
     engine = getDatabaseEngine()
     response = {}
     accounts = []
