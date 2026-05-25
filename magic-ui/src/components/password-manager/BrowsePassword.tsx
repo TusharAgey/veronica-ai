@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Trash2 } from "lucide-react"; // Assuming you have lucide-react or similar for the eye icon
+import { motion, AnimatePresence } from "framer-motion";
 import { MagicCard } from "../ui/MagicCard";
 import { GlassInput, GlassSelect } from "../ui/GlassInput";
 import {
@@ -113,52 +114,65 @@ export function BrowsePassword() {
           </button>
         </div>
 
-        {/* Details List */}
-        {accountDetails && (
-          <div className="mt-6 space-y-2 text-white/90 font-light text-ms">
-            <p>
-              <span className="font-normal">Name:</span>{" "}
-              {accountDetails.account_name}
-            </p>
-            <p>
-              <span className="font-normal">User Name:</span>{" "}
-              {accountDetails.username}
-            </p>
-            <p>
-              <span className="font-normal">Email:</span> {accountDetails.email}
-            </p>
-
-            <p>
-              <span className="font-normal">Password:</span> {decryptedPassword}
-            </p>
-            <p>
-              <span className="font-normal">Description:</span>{" "}
-              {accountDetails.account_description}
-            </p>
-            <p>
-              <span className="font-normal">Creation Date:</span>{" "}
-              {accountDetails.creation_date}
-            </p>
-            {selectedAccount !== "Select account..." && (
-              <button
-                disabled={selectedAccount === "Select account..."}
-                onClick={() => {
-                  const confirmed = window.confirm(
-                    `Delete account "${selectedAccount}"?\n\nThis can be restored later.`,
-                  );
-                  if (confirmed) {
-                    deleteAccount(selectedAccount!).then(() => {
-                      setSelectedAccount("");
-                    });
-                  }
-                }}
-                className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-red-300"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        )}
+        {/* Details List — Animated Reveal */}
+        <AnimatePresence mode="wait">
+          {accountDetails && (
+            <motion.div
+              key={selectedAccount}
+              initial={{ opacity: 0, y: 20, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="mt-6 space-y-2 text-white/90 font-light text-ms overflow-hidden"
+            >
+              {[
+                { label: "Name", value: accountDetails.account_name },
+                { label: "User Name", value: accountDetails.username },
+                { label: "Email", value: accountDetails.email },
+                { label: "Password", value: decryptedPassword },
+                {
+                  label: "Description",
+                  value: accountDetails.account_description,
+                },
+                { label: "Creation Date", value: accountDetails.creation_date },
+              ].map((field, i) => (
+                <motion.p
+                  key={field.label}
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.06 }}
+                >
+                  <span className="font-normal">{field.label}:</span>{" "}
+                  {field.value}
+                </motion.p>
+              ))}
+              {selectedAccount !== "Select account..." && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.4 }}
+                >
+                  <button
+                    disabled={selectedAccount === "Select account..."}
+                    onClick={() => {
+                      const confirmed = window.confirm(
+                        `Delete account "${selectedAccount}"?\n\nThis can be restored later.`,
+                      );
+                      if (confirmed) {
+                        deleteAccount(selectedAccount!).then(() => {
+                          setSelectedAccount("");
+                        });
+                      }
+                    }}
+                    className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-red-300"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </MagicCard>
   );

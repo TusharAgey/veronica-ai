@@ -221,25 +221,45 @@ export function ChatMessageList({ chats }: ChatProps) {
         className="h-full overflow-y-auto pt-4 pb-4 px-4 sm:px-6 flex flex-col gap-4 md:gap-8 scrollbar-hide z-10"
       >
         {[...chats].map((chat, idx) => (
-          <div key={idx} className="flex flex-col gap-6 w-full">
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{
+              duration: 0.4,
+              delay: idx * 0.08,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
+            className="flex flex-col gap-6 w-full"
+          >
             {/* USER MESSAGE (Right Aligned, Cyan Pill) */}
-            <div className="flex justify-end w-full">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, delay: idx * 0.08 + 0.05 }}
+              className="flex justify-end w-full"
+            >
               <div className="bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] text-white px-6 py-3 rounded-t-2xl rounded-l-2xl rounded-br-md max-w-[85%] sm:max-w-[80%] text-[15px] font-medium">
                 {chat.user}
               </div>
-            </div>
+            </motion.div>
 
             {/* LLM MESSAGE (Left Aligned, Dark Card) */}
             {chat.assistant === "" ? (
               <TypingIndicator />
             ) : (
-              <div className="flex justify-start w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.35, delay: idx * 0.08 + 0.12 }}
+                className="flex justify-start w-full"
+              >
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-5 rounded-r-2xl rounded-b-2xl rounded-tl-sm shadow-xl max-w-[90%]">
                   <MessageFormatter text={chat.assistant} />
                 </div>
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         ))}
         <div ref={messagesEndRef} />
       </div>

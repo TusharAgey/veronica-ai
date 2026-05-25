@@ -15,13 +15,10 @@ const HologramModal = lazy(
 import { SpatialEnvironment } from "./components/layout/SpatialEnvironment";
 import { MainGlassPanel } from "./components/layout/MainGlassPanel";
 import { TopHeader } from "./components/layout/TopHeader";
+import { ViewSkeleton } from "./components/ui/Skeleton";
 
 function ViewFallback() {
-  return (
-    <div className="flex items-center justify-center h-full w-full">
-      <div className="w-8 h-8 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
-    </div>
-  );
+  return <ViewSkeleton />;
 }
 
 export default function App() {
@@ -166,10 +163,28 @@ export default function App() {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
-                    initial={{ opacity: 0, scale: 0.98, filter: "blur(8px)" }}
-                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, scale: 0.98, filter: "blur(8px)" }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    initial={{
+                      opacity: 0,
+                      y: 30,
+                      scale: 0.97,
+                      filter: "blur(8px)",
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      filter: "blur(0px)",
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: -20,
+                      scale: 0.97,
+                      filter: "blur(8px)",
+                    }}
+                    transition={{
+                      duration: 0.35,
+                      ease: [0.25, 0.46, 0.45, 0.94],
+                    }}
                     className="h-full"
                   >
                     <Suspense fallback={<ViewFallback />}>

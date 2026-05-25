@@ -55,3 +55,10 @@ html {
 * {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* ── Shimmer Animation for Skeleton Loaders ─────────────────── */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

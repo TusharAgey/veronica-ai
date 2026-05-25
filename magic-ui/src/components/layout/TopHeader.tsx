@@ -1,5 +1,6 @@
 import { User, Settings as SettingsIcon } from "lucide-react";
 import { getGreetingByTime } from "../../utilities/utils";
+
 interface TopHeaderProps {
   activeTab: string;
   theme: "dark" | "midnight";
@@ -41,7 +42,7 @@ export function TopHeader({
         </span>
         <button
           onClick={onOpenSettings}
-          className="hover:rotate-90 transition-transform duration-300 pl-2"
+          className="hover:rotate-90 transition-transform duration-300 pl-2 bg-transparent border-none cursor-pointer"
         >
           <SettingsIcon size={16} className="text-white/50 hover:text-white" />
         </button>

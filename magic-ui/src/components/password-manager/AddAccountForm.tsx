@@ -6,6 +6,7 @@ import { pwdManagerFields } from "../../utilities/const";
 import { handleAddNewAccount } from "../../utilities/utils";
 import { useCreateNewAccountMutation } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
+import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
 
 export function AddAccountForm() {
   const [createNewAccount, { isError, isSuccess }] =
@@ -44,13 +45,15 @@ export function AddAccountForm() {
         }}
       >
         {pwdManagerFields.map(({ fieldIdentifier, fieldType, placeholder }) => (
-          <GlassInput
-            key={fieldIdentifier}
-            id={fieldIdentifier}
-            type={fieldType}
-            placeholder={placeholder}
-            required
-          />
+          <div key={fieldIdentifier}>
+            <GlassInput
+              id={fieldIdentifier}
+              type={fieldType}
+              placeholder={placeholder}
+              required
+            />
+            {fieldIdentifier === "password" && <PasswordStrengthMeter />}
+          </div>
         ))}
 
         <button className="w-full py-4 mt-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-semibold transition-all shadow-[0_0_20px_rgba(99,102,241,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)]">

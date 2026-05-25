@@ -4,6 +4,7 @@ import { BrowsePassword } from "../../../components/password-manager/BrowsePassw
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { api } from "../../../services/api";
+import { ToastProvider } from "../../../context/ToastContext";
 
 // Use vi.hoisted to avoid hoisting issues with vi.mock factory
 const { mockDecryptModern } = vi.hoisted(() => ({
@@ -36,6 +37,7 @@ vi.mock("../../../services/api", async () => {
     useGetAccountsQuery: () => ({ data: mockAccounts, isLoading: false }),
     useGetAccountDetailsQuery: (_accountName: string, _options: any) => ({
       data: mockAccountDetails,
+      currentData: _options?.skip ? undefined : mockAccountDetails,
       isLoading: false,
     }),
   };
@@ -52,7 +54,11 @@ function createMockStore() {
 }
 
 function renderWithProviders(ui: React.ReactElement) {
-  return render(<Provider store={createMockStore()}>{ui}</Provider>);
+  return render(
+    <Provider store={createMockStore()}>
+      <ToastProvider>{ui}</ToastProvider>
+    </Provider>,
+  );
 }
 
 describe("BrowsePassword", () => {
@@ -91,6 +97,9 @@ describe("BrowsePassword", () => {
 
   it("shows account details when accountDetails is available", () => {
     renderWithProviders(<BrowsePassword />);
+    // Select an account to trigger account details display
+    const select = screen.getByRole("combobox");
+    fireEvent.change(select, { target: { value: "Account1" } });
     const accountElements = screen.getAllByText("Account1");
     expect(accountElements.length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("testuser")).toBeInTheDocument();
@@ -118,6 +127,9 @@ describe("BrowsePassword", () => {
 
   it("shows masked password when not revealed", () => {
     renderWithProviders(<BrowsePassword />);
+    // Select an account to trigger account details display
+    const select = screen.getByRole("combobox");
+    fireEvent.change(select, { target: { value: "Account1" } });
     expect(screen.getByText("***********")).toBeInTheDocument();
   });
 
