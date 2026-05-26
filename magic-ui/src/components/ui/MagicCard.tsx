@@ -32,7 +32,7 @@ export function MagicCard({
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "group relative flex h-full w-full overflow-hidden rounded-[2rem] transition-all duration-300",
+        "group relative flex h-full w-full rounded-[2rem] transition-all duration-300",
         // Increased baseline opacity and border for permanent visibility
         "bg-white/[0.06] border border-white/[0.12] shadow-[0_8px_32px_0_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)]",
         "hover:bg-white/[0.08]",
@@ -41,7 +41,7 @@ export function MagicCard({
       {...props}
     >
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-[2rem] opacity-0 transition duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute -inset-px rounded-[2rem] opacity-0 transition duration-300 group-hover:opacity-100 overflow-hidden"
         style={{
           background: useMotionTemplate`radial-gradient(${gradientSize}px circle at ${mouseX}px ${mouseY}px, ${gradientColor}, transparent 100%)`,
           opacity: isHovered ? gradientOpacity : 0,

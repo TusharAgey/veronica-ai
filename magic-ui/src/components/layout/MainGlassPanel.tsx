@@ -10,7 +10,7 @@ export function MainGlassPanel({
   blurValue,
 }: MainGlassPanelProps) {
   const baseClasses =
-    "flex-1 flex flex-col relative overflow-hidden border rounded-[2.5rem] p-4 md:p-8 pb-0 transition-all duration-1000";
+    "flex-1 flex flex-col relative border rounded-[2.5rem] p-4 md:p-8 pb-0 transition-all duration-1000";
 
   const themeClasses =
     theme === "midnight"

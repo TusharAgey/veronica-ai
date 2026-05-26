@@ -159,7 +159,7 @@ export default function App() {
               />
 
               {/* DYNAMIC VIEW ROUTER */}
-              <div className="flex-1 overflow-y-auto px-1 md:pr-2 z-10">
+              <div className="flex-1 overflow-y-auto px-1 md:pr-2 z-10 pt-1">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
