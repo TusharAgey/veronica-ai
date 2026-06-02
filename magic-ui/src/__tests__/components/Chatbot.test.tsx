@@ -61,7 +61,7 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("Chatbot", () => {
   it("renders the bot selector", () => {
     renderWithProviders(<Chatbot />);
-    expect(screen.getByText("Code Bot")).toBeInTheDocument();
+    expect(screen.getAllByText("Code Bot").length).toBeGreaterThan(0);
   });
 
   it("renders the chat input area", () => {

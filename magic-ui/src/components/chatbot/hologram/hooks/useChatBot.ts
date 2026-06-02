@@ -2,11 +2,13 @@ import { useEffect, useRef, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../store/store";
 import {
   addUserPrompt,
+  createSession,
   updateLatestLlmResponse,
 } from "../../../../store/chatsSlice";
 import { useLazyRunLlamaQuery } from "../../../../services/llamaApi";
 import { botPersonality } from "../../../../utilities/const";
 import { getKokoroAudio } from "../../../../utilities/apiCalls";
+import { chatHistory } from "../../../../utilities/utils";
 import type { AppState } from "../types";
 import { BOT } from "../constants";
 
@@ -21,11 +23,18 @@ export const useChatBot = ({
   stateRef,
   handleStateChange,
 }: UseChatBotProps) => {
-  const { sessions } = useAppSelector((state) => state.chats);
+  const { sessions, messages, activeSessionId } = useAppSelector(
+    (state) => state.chats,
+  );
   const dispatch = useAppDispatch();
   const [runLlama, result] = useLazyRunLlamaQuery();
 
-  const chatsSoFar = sessions[BOT] || [];
+  const activeSession = activeSessionId ? sessions[activeSessionId] : null;
+  const hologramSessionId =
+    activeSession?.bot === BOT
+      ? activeSession.id
+      : Object.values(sessions).find((session) => session.bot === BOT)?.id;
+  const chatsSoFar = hologramSessionId ? messages[hologramSessionId] || [] : [];
   const chatsRef = useRef(chatsSoFar);
 
   useEffect(() => {
@@ -54,25 +63,39 @@ export const useChatBot = ({
   );
 
   const handleSend = useCallback(
-    (input: string, conversationHistory: any[]) => {
+    (input: string, conversationHistory: ReturnType<typeof chatHistory>) => {
       if (!input.trim()) return;
 
-      dispatch(addUserPrompt({ bot: BOT, user: input }));
+      let sessionId = hologramSessionId;
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        dispatch(createSession({ bot: BOT, id: sessionId }));
+      }
+
+      dispatch(addUserPrompt({ sessionId, user: input }));
 
       runLlama({
         prompt: [...conversationHistory, { role: "user", content: input }],
         backstory: botPersonality[BOT],
       });
     },
-    [dispatch, runLlama],
+    [dispatch, hologramSessionId, runLlama],
   );
 
   useEffect(() => {
-    if (!result.data || result.data?.streaming) return;
+    if (!result.data || result.data?.streaming || !hologramSessionId) return;
     dispatch(
-      updateLatestLlmResponse({ bot: BOT, assistant: result.data.content }),
+      updateLatestLlmResponse({
+        sessionId: hologramSessionId,
+        assistant: result.data.content,
+      }),
     );
-  }, [result.data?.content, dispatch, result.data?.streaming]);
+  }, [
+    result.data?.content,
+    dispatch,
+    result.data?.streaming,
+    hologramSessionId,
+  ]);
 
   useEffect(() => {
     if (stateRef.current === "IDLE") return;

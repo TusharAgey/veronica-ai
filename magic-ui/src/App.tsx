@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAppDispatch } from "./store/store";
+import { hydrateChatHistory } from "./store/chatsSlice";
+import { loadChatHistory } from "./utilities/utils";
 
 // Views & Modals — lazy-loaded for code splitting
 const Sidebar = lazy(() => import("./components/SideMenuBar"));
@@ -22,6 +25,7 @@ function ViewFallback() {
 }
 
 export default function App() {
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
@@ -32,6 +36,15 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.add("dark");
   }, []);
+
+  // ── Hydrate chat history from localStorage on app init ─────────────────
+  // Done at the App level so data is available before Chatbot mounts.
+  useEffect(() => {
+    const saved = loadChatHistory();
+    if (saved && Object.keys(saved.sessions).length > 0) {
+      dispatch(hydrateChatHistory(saved));
+    }
+  }, [dispatch]);
 
   // ── Mobile Keyboard: visualViewport API ──────────────────────
   // Detects when the virtual keyboard opens/closes and adjusts the

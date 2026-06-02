@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { chatHistory } from "../../../../utilities/utils";
+import type { ChatTurn } from "../../../../services/types";
 import type {
   AppState,
   IWindow,
@@ -13,9 +14,9 @@ interface UseSpeechRecognitionProps {
   isAudioActive: boolean;
   isOpen: boolean;
   stateRef: React.MutableRefObject<AppState>;
-  chatsRef: React.MutableRefObject<any[]>;
+  chatsRef: React.MutableRefObject<ChatTurn[]>;
   handleStateChange: (state: AppState) => void;
-  handleSend: (input: string, history: any[]) => void;
+  handleSend: (input: string, history: ReturnType<typeof chatHistory>) => void;
 }
 
 export const useSpeechRecognition = ({

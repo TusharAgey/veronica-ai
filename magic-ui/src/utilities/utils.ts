@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { laodRandomFile } from "./apiCalls";
 import { SYSTEM, ASSISTANT } from "./const";
-import type { ChatMessage } from "../services/types";
+import type { ChatMessage, ChatHistoryState } from "../services/types";
 
 export function chatHistory(
   chats: Array<{ user: string; assistant: string }>,
@@ -285,3 +285,79 @@ export const readText = (
     setInputText(decryptModern(response, key));
   });
 };
+
+/**
+ * Format a timestamp as a human-readable relative time string.
+ * e.g. "just now", "2h ago", "Yesterday", "3 days ago", etc.
+ */
+export function formatRelativeTime(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (seconds < 60) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
+}
+
+// ─── localStorage Persistence ────────────────────────────────────────────────
+
+const STORAGE_KEY = "veronica-chat-history";
+
+function isChatHistoryState(value: unknown): value is ChatHistoryState {
+  if (!value || typeof value !== "object") return false;
+  const state = value as Partial<ChatHistoryState>;
+  return (
+    !!state.sessions &&
+    typeof state.sessions === "object" &&
+    !!state.messages &&
+    typeof state.messages === "object" &&
+    (typeof state.activeSessionId === "string" ||
+      state.activeSessionId === null)
+  );
+}
+
+/**
+ * Save chat history state to localStorage.
+ */
+export function saveChatHistory(state: ChatHistoryState): void {
+  try {
+    const persisted: ChatHistoryState = {
+      ...state,
+      searchQuery: "",
+      panelOpen: false,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+  } catch (e) {
+    console.error("Failed to save chat history to localStorage", e);
+  }
+}
+
+/**
+ * Load chat history state from localStorage.
+ */
+export function loadChatHistory(): ChatHistoryState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!isChatHistoryState(parsed)) return null;
+    return {
+      ...parsed,
+      searchQuery: "",
+      panelOpen: false,
+    };
+  } catch (e) {
+    console.error("Failed to load chat history from localStorage", e);
+    return null;
+  }
+}
