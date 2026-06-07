@@ -59,9 +59,13 @@ export default function Chatbot() {
   }, []);
 
   const handleStopQuery = () => {
-    if (activeSessionId) {
-      dispatch(removeLastUserPrompt({ sessionId: activeSessionId }));
+    const sessionId = streamSessionIdRef.current ?? activeSessionId;
+
+    if (sessionId) {
+      dispatch(removeLastUserPrompt({ sessionId }));
     }
+
+    streamSessionIdRef.current = null;
     stopGeneration();
   };
 
