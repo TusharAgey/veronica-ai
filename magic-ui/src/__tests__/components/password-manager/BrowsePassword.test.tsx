@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { beforeEach, describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowsePassword } from "../../../components/password-manager/BrowsePassword";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -7,9 +7,12 @@ import { api } from "../../../services/api";
 import { ToastProvider } from "../../../context/ToastContext";
 
 // Use vi.hoisted to avoid hoisting issues with vi.mock factory
-const { mockDecryptModern } = vi.hoisted(() => ({
-  mockDecryptModern: vi.fn().mockResolvedValue("decrypted-pass"),
-}));
+const { mockDecryptModern, mockDeleteAccountState, mockDeleteAccount } =
+  vi.hoisted(() => ({
+    mockDecryptModern: vi.fn().mockResolvedValue("decrypted-pass"),
+    mockDeleteAccountState: { isError: false, isSuccess: false },
+    mockDeleteAccount: vi.fn(() => Promise.resolve({ data: undefined })),
+  }));
 
 vi.mock("../../../utilities/utils", async () => {
   const actual = await vi.importActual("../../../utilities/utils");
@@ -40,6 +43,7 @@ vi.mock("../../../services/api", async () => {
       currentData: _options?.skip ? undefined : mockAccountDetails,
       isLoading: false,
     }),
+    useDeleteAccountMutation: () => [mockDeleteAccount, mockDeleteAccountState],
   };
 });
 
@@ -64,6 +68,13 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("BrowsePassword", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDeleteAccountState.isError = false;
+    mockDeleteAccountState.isSuccess = false;
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn(),
+      },
+    });
   });
 
   it("renders the title", () => {
@@ -114,15 +125,14 @@ describe("BrowsePassword", () => {
     expect(revealButton).toBeDisabled();
   });
 
-  it("reveal button is disabled even with 16 character password (due to variable name mismatch in source)", () => {
-    // Note: The source code has a bug where onChange sets `sessionPassword`
-    // but the disabled check reads `sessionPasword` (missing 's')
+  it("enables the reveal button when an account is selected and the session password is 16 characters", () => {
     renderWithProviders(<BrowsePassword />);
+    const select = screen.getByRole("combobox");
+    fireEvent.change(select, { target: { value: "Account1" } });
     const sessionInput = screen.getByPlaceholderText("Session Password");
     fireEvent.change(sessionInput, { target: { value: "1234567890123456" } });
     const revealButton = screen.getAllByRole("button")[0];
-    // Button remains disabled due to the variable name mismatch bug
-    expect(revealButton).toBeDisabled();
+    expect(revealButton).toBeEnabled();
   });
 
   it("shows masked password when not revealed", () => {
@@ -139,5 +149,105 @@ describe("BrowsePassword", () => {
     // The Eye icon is rendered as an SVG inside the button
     const svg = revealButton.querySelector("svg");
     expect(svg).toBeTruthy();
+  });
+
+  it("decrypts and displays the password after reveal is clicked", async () => {
+    renderWithProviders(<BrowsePassword />);
+
+    fireEvent.change(screen.getByRole("combobox"), {
+      target: { value: "Account1" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Session Password"), {
+      target: { value: "1234567890123456" },
+    });
+    fireEvent.click(screen.getAllByRole("button")[0]);
+
+    expect(screen.getByText("Decrypting...")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockDecryptModern).toHaveBeenCalledWith(
+        "encrypted-pass-data",
+        "1234567890123456",
+      );
+      expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
+    });
+  });
+
+  it("copies the decrypted password and shows a success toast", async () => {
+    renderWithProviders(<BrowsePassword />);
+
+    fireEvent.change(screen.getByRole("combobox"), {
+      target: { value: "Account1" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Session Password"), {
+      target: { value: "1234567890123456" },
+    });
+    fireEvent.click(screen.getAllByRole("button")[0]);
+
+    await screen.findByText("decrypted-pass");
+    const copyButton = screen.getAllByRole("button")[1];
+    fireEvent.click(copyButton);
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      "decrypted-pass",
+    );
+    expect(
+      await screen.findByText("Password copied to clipboard!"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not delete the selected account when confirmation is cancelled", () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    renderWithProviders(<BrowsePassword />);
+
+    fireEvent.change(screen.getByRole("combobox"), {
+      target: { value: "Account1" },
+    });
+    const deleteButton = screen.getAllByRole("button").at(-1)!;
+    fireEvent.click(deleteButton);
+
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Delete account "Account1"?\n\nThis can be restored later.',
+    );
+    expect(mockDeleteAccount).not.toHaveBeenCalled();
+  });
+
+  it("deletes the selected account after confirmation and resets the selection", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithProviders(<BrowsePassword />);
+
+    const select = screen.getByRole("combobox") as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: "Account1" } });
+    const deleteButton = screen.getAllByRole("button").at(-1)!;
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockDeleteAccount).toHaveBeenCalledWith("Account1");
+      expect(select.value).toBe("");
+    });
+  });
+
+  it("shows delete success and error toast messages from mutation state", async () => {
+    mockDeleteAccountState.isSuccess = true;
+    const { rerender } = renderWithProviders(<BrowsePassword />);
+
+    expect(
+      await screen.findByText("Succesfully Deleted the account!"),
+    ).toBeInTheDocument();
+
+    mockDeleteAccountState.isSuccess = false;
+    mockDeleteAccountState.isError = true;
+    rerender(
+      <Provider store={createMockStore()}>
+        <ToastProvider>
+          <BrowsePassword />
+        </ToastProvider>
+      </Provider>,
+    );
+
+    expect(
+      await screen.findByText(
+        "Failed to delete the account. Perhapse, the server is down",
+      ),
+    ).toBeInTheDocument();
   });
 });

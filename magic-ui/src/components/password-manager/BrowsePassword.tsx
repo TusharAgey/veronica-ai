@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Trash2 } from "lucide-react"; // Assuming you have lucide-react or similar for the eye icon
+import { Eye, EyeOff, Trash2, Copy } from "lucide-react"; // Assuming you have lucide-react or similar for the eye icon
 import { motion, AnimatePresence } from "framer-motion";
 import { MagicCard } from "../ui/MagicCard";
 import { GlassInput, GlassSelect } from "../ui/GlassInput";
@@ -144,6 +144,27 @@ export function BrowsePassword() {
                 >
                   <span className="font-normal">{field.label}:</span>{" "}
                   {field.value}
+                  {field.label === "Password" && (
+                    <button
+                      style={
+                        !isRevealed
+                          ? {
+                              cursor: "not-allowed",
+                              opacity: 0.1,
+                              marginLeft: "15px",
+                            }
+                          : { marginLeft: "15px" }
+                      }
+                      disabled={!isRevealed}
+                      onClick={() => {
+                        navigator.clipboard.writeText(decryptedPassword);
+                        successToast("Password copied to clipboard!");
+                      }}
+                      className="p-1 rounded bg-white/10 border border-white/5 hover:bg-white/20 transition-all text-white"
+                    >
+                      <Copy />
+                    </button>
+                  )}
                 </motion.p>
               ))}
               {selectedAccount !== "Select account..." && (
