@@ -7,6 +7,7 @@ import {
 import { api, llama } from "../services/api";
 import { llamaApi } from "../services/llamaApi";
 import chatsReducer from "./chatsSlice";
+import { saveChatHistory } from "../utilities/utils";
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,18 @@ export const store = configureStore({
       .concat(api.middleware)
       .concat(llama.middleware)
       .concat(llamaApi.middleware),
+});
+
+// ─── Auto-save chat history to localStorage ──────────────────────────────────
+// Debounced write on every state change to persist chat sessions.
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+store.subscribe(() => {
+  const state = store.getState();
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    saveChatHistory(state.chats);
+  }, 500); // 500ms debounce
 });
 
 /**

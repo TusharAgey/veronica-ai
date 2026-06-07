@@ -80,6 +80,24 @@ export interface ChatTurn {
   assistant: string;
 }
 
+export interface ChatSessionMeta {
+  id: string; // crypto.randomUUID()
+  name: string; // User-visible title, defaults to "Chat with {bot}"
+  bot: string; // Which bot this session belongs to
+  createdAt: number; // Date.now()
+  updatedAt: number; // Date.now() on last message
+  messageCount: number;
+  lastMessagePreview: string; // Truncated last user message
+}
+
+export interface ChatHistoryState {
+  sessions: Record<string, ChatSessionMeta>; // keyed by session id
+  messages: Record<string, ChatTurn[]>; // keyed by session id
+  activeSessionId: string | null;
+  searchQuery: string;
+  panelOpen: boolean; // collapsed by default
+}
+
 export type ChatSessions = Record<string, ChatTurn[]>;
 
 export interface ChatsState {

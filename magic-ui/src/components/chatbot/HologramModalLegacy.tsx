@@ -36,8 +36,15 @@ const SILENCE_BASE64 =
   "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
 const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
-  const { sessions } = useAppSelector((state) => state.chats);
-  const chatsSoFar = sessions[BOT] || [];
+  const { sessions, messages, activeSessionId } = useAppSelector(
+    (state) => state.chats,
+  );
+  const activeSession = activeSessionId ? sessions[activeSessionId] : null;
+  const hologramSessionId =
+    activeSession?.bot === BOT
+      ? activeSession.id
+      : Object.values(sessions).find((session) => session.bot === BOT)?.id;
+  const chatsSoFar = hologramSessionId ? messages[hologramSessionId] || [] : [];
   const chatsRef = useRef(chatsSoFar);
   const [runLlama, result] = useLazyRunLlamaQuery();
   const dispatch = useAppDispatch();
@@ -68,11 +75,12 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
   function handleSend(input: string, conversationHistory: ChatMessage[]) {
     console.log({ input, conversationHistory });
     if (!input.trim()) return;
+    if (!hologramSessionId) return;
 
     // add user row immediately
     dispatch(
       addUserPrompt({
-        bot: BOT,
+        sessionId: hologramSessionId,
         user: input,
       }),
     );
@@ -97,14 +105,19 @@ const HologramModal: React.FC<HologramModalProps> = ({ isOpen, onClose }) => {
    * Sync stream output into chat slice
    */
   useEffect(() => {
-    if (!result.data || result.data?.streaming) return;
+    if (!result.data || result.data?.streaming || !hologramSessionId) return;
     dispatch(
       updateLatestLlmResponse({
-        bot: BOT,
+        sessionId: hologramSessionId,
         assistant: result.data.content,
       }),
     );
-  }, [result.data?.content, BOT, dispatch, result.data?.streaming]);
+  }, [
+    result.data?.content,
+    dispatch,
+    result.data?.streaming,
+    hologramSessionId,
+  ]);
 
   useEffect(() => {
     if (stateRef.current === "IDLE") return;
