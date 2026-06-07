@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/store";
@@ -50,6 +50,7 @@ export default function Chatbot() {
   const activeBot = activeSession?.bot ?? AVAILABLE_BOTS[0];
   const chatsSoFar = activeSessionId ? messages[activeSessionId] || [] : [];
   const [runLlama, result] = useLazyRunLlamaQuery();
+  const streamSessionIdRef = useRef<string | null>(null);
 
   // Only apply safe-area keyboard padding on mobile (touch) devices.
   const [isMobile, setIsMobile] = useState(false);
@@ -76,12 +77,14 @@ export default function Chatbot() {
    */
   const handleSend = async (input: string) => {
     if (!input.trim() || !activeSessionId) return;
+    const sessionId = activeSessionId;
     stopGeneration(); // Cancel any inflight request.
+    streamSessionIdRef.current = sessionId;
 
     // add user row immediately
     dispatch(
       addUserPrompt({
-        sessionId: activeSessionId,
+        sessionId,
         user: input,
       }),
     );
@@ -103,14 +106,15 @@ export default function Chatbot() {
    * Sync stream output into chat slice
    */
   useEffect(() => {
-    if (!result.data || !activeSessionId) return;
+    const streamSessionId = streamSessionIdRef.current;
+    if (!result.data || !streamSessionId) return;
     dispatch(
       updateLatestLlmResponse({
-        sessionId: activeSessionId,
+        sessionId: streamSessionId,
         assistant: result.data.content,
       }),
     );
-  }, [result.data?.content, activeSessionId, dispatch]);
+  }, [result.data?.content, dispatch]);
 
   return (
     <div className="flex flex-col h-full relative overflow-hidden rounded-[2rem]">
