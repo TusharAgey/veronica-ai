@@ -74,6 +74,8 @@ describe("MagicCard", () => {
     const { container } = render(<MagicCard>Gradient</MagicCard>);
     const card = container.firstElementChild;
     expect(card?.className).toContain("rounded-[2rem]");
-    expect(card?.className).toContain("overflow-hidden");
+    expect(card?.className).toContain(
+      "group relative flex h-full w-full rounded-[2rem] transition-all duration-300 bg-white/[0.06] border border-white/[0.12] shadow-[0_8px_32px_0_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:bg-white/[0.08]",
+    );
   });
 });

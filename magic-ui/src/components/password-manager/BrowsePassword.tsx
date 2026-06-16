@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, Trash2, Copy } from "lucide-react"; // Assuming you have lucide-react or similar for the eye icon
 import { motion, AnimatePresence } from "framer-motion";
 import { MagicCard } from "../ui/MagicCard";
-import { GlassInput, GlassSelect } from "../ui/GlassInput";
+import { GlassInput, GlassSearchableSelect } from "../ui/GlassInput";
 import {
   useGetAccountDetailsQuery,
   useGetAccountsQuery,
@@ -69,21 +69,13 @@ export function BrowsePassword() {
     <MagicCard className="p-8 flex-1">
       <h2 className="text-xl font-semibold text-white mb-6">Browse Password</h2>
       <div className="space-y-5">
-        <GlassSelect
-          value={selectedAccount!}
-          onChange={(e) => {
-            setSelectedAccount(e.target.value);
+        <GlassSearchableSelect
+          options={accounts}
+          value={selectedAccount}
+          onChange={(value) => {
+            setSelectedAccount(value);
           }}
-        >
-          <option className="bg-[#0f0f1a]" value="">
-            Select account...
-          </option>
-          {accounts.map((account, idx) => (
-            <option key={`${account}-${idx}`} value={account}>
-              {account}
-            </option>
-          ))}
-        </GlassSelect>
+        />
 
         <GlassInput
           type="password"

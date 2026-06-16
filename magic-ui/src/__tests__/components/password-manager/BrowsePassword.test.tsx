@@ -65,6 +65,32 @@ function renderWithProviders(ui: React.ReactElement) {
   );
 }
 
+/** Find the reveal/hide toggle button (the one with Eye/EyeOff icon) */
+function getRevealButton(): HTMLElement {
+  // The reveal button is the one that contains an SVG with the eye icon
+  const buttons = screen.getAllByRole("button");
+  // The reveal button is the one that is NOT the dropdown trigger and NOT a dropdown option
+  // It's the button that has an SVG child with class containing "lucide-eye" or "lucide-eye-off"
+  return buttons.find(
+    (btn) =>
+      btn.querySelector("svg.lucide-eye, svg.lucide-eye-off") !== null ||
+      btn.innerHTML.includes("lucide-eye"),
+  )!;
+}
+
+/** Helper: open the searchable select dropdown and click the given account name */
+function selectAccount(accountName: string) {
+  // Click the trigger button to open the dropdown
+  const trigger = screen.getByRole("button", {
+    name: /select account/i,
+  });
+  fireEvent.click(trigger);
+
+  // Click the desired option in the dropdown
+  const option = screen.getByRole("button", { name: accountName });
+  fireEvent.click(option);
+}
+
 describe("BrowsePassword", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -82,7 +108,7 @@ describe("BrowsePassword", () => {
     expect(screen.getByText("Browse Password")).toBeInTheDocument();
   });
 
-  it("renders the account selector", () => {
+  it("renders the account selector with placeholder", () => {
     renderWithProviders(<BrowsePassword />);
     expect(screen.getByText("Select account...")).toBeInTheDocument();
   });
@@ -94,25 +120,31 @@ describe("BrowsePassword", () => {
 
   it("renders the reveal/hide button", () => {
     renderWithProviders(<BrowsePassword />);
-    const buttons = screen.getAllByRole("button");
-    expect(buttons.length).toBeGreaterThanOrEqual(1);
+    const revealButton = getRevealButton();
+    expect(revealButton).toBeInTheDocument();
   });
 
-  it("renders account options from useGetAccountsQuery", () => {
+  it("renders account options in the dropdown", () => {
     renderWithProviders(<BrowsePassword />);
-    const account1Options = screen.getAllByText("Account1");
-    expect(account1Options.length).toBeGreaterThanOrEqual(1);
-    const account2Options = screen.getAllByText("Account2");
-    expect(account2Options.length).toBeGreaterThanOrEqual(1);
+    // Open the dropdown
+    const trigger = screen.getByRole("button", {
+      name: /select account/i,
+    });
+    fireEvent.click(trigger);
+
+    // Now the options should be visible
+    expect(
+      screen.getByRole("button", { name: "Account1" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Account2" }),
+    ).toBeInTheDocument();
   });
 
-  it("shows account details when accountDetails is available", () => {
+  it("shows account details when an account is selected", () => {
     renderWithProviders(<BrowsePassword />);
-    // Select an account to trigger account details display
-    const select = screen.getByRole("combobox");
-    fireEvent.change(select, { target: { value: "Account1" } });
-    const accountElements = screen.getAllByText("Account1");
-    expect(accountElements.length).toBeGreaterThanOrEqual(2);
+    selectAccount("Account1");
+
     expect(screen.getByText("testuser")).toBeInTheDocument();
     expect(screen.getByText("test@test.com")).toBeInTheDocument();
     expect(screen.getByText("Test account description")).toBeInTheDocument();
@@ -121,31 +153,29 @@ describe("BrowsePassword", () => {
 
   it("reveal button is disabled when session password is not 16 characters", () => {
     renderWithProviders(<BrowsePassword />);
-    const revealButton = screen.getAllByRole("button")[0];
+    const revealButton = getRevealButton();
     expect(revealButton).toBeDisabled();
   });
 
   it("enables the reveal button when an account is selected and the session password is 16 characters", () => {
     renderWithProviders(<BrowsePassword />);
-    const select = screen.getByRole("combobox");
-    fireEvent.change(select, { target: { value: "Account1" } });
+    selectAccount("Account1");
+
     const sessionInput = screen.getByPlaceholderText("Session Password");
     fireEvent.change(sessionInput, { target: { value: "1234567890123456" } });
-    const revealButton = screen.getAllByRole("button")[0];
+    const revealButton = getRevealButton();
     expect(revealButton).toBeEnabled();
   });
 
   it("shows masked password when not revealed", () => {
     renderWithProviders(<BrowsePassword />);
-    // Select an account to trigger account details display
-    const select = screen.getByRole("combobox");
-    fireEvent.change(select, { target: { value: "Account1" } });
+    selectAccount("Account1");
     expect(screen.getByText("***********")).toBeInTheDocument();
   });
 
   it("shows Eye icon on the reveal button", () => {
     renderWithProviders(<BrowsePassword />);
-    const revealButton = screen.getAllByRole("button")[0];
+    const revealButton = getRevealButton();
     // The Eye icon is rendered as an SVG inside the button
     const svg = revealButton.querySelector("svg");
     expect(svg).toBeTruthy();
@@ -154,13 +184,11 @@ describe("BrowsePassword", () => {
   it("decrypts and displays the password after reveal is clicked", async () => {
     renderWithProviders(<BrowsePassword />);
 
-    fireEvent.change(screen.getByRole("combobox"), {
-      target: { value: "Account1" },
-    });
+    selectAccount("Account1");
     fireEvent.change(screen.getByPlaceholderText("Session Password"), {
       target: { value: "1234567890123456" },
     });
-    fireEvent.click(screen.getAllByRole("button")[0]);
+    fireEvent.click(getRevealButton());
 
     expect(screen.getByText("Decrypting...")).toBeInTheDocument();
     await waitFor(() => {
@@ -175,16 +203,17 @@ describe("BrowsePassword", () => {
   it("copies the decrypted password and shows a success toast", async () => {
     renderWithProviders(<BrowsePassword />);
 
-    fireEvent.change(screen.getByRole("combobox"), {
-      target: { value: "Account1" },
-    });
+    selectAccount("Account1");
     fireEvent.change(screen.getByPlaceholderText("Session Password"), {
       target: { value: "1234567890123456" },
     });
-    fireEvent.click(screen.getAllByRole("button")[0]);
+    fireEvent.click(getRevealButton());
 
     await screen.findByText("decrypted-pass");
-    const copyButton = screen.getAllByRole("button")[1];
+    // Copy button is the one with a Copy icon (lucide-copy), before the delete button
+    const copyButton = screen
+      .getAllByRole("button")
+      .find((btn) => btn.innerHTML.includes("lucide-copy"))!;
     fireEvent.click(copyButton);
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
@@ -199,9 +228,7 @@ describe("BrowsePassword", () => {
     vi.spyOn(window, "confirm").mockReturnValue(false);
     renderWithProviders(<BrowsePassword />);
 
-    fireEvent.change(screen.getByRole("combobox"), {
-      target: { value: "Account1" },
-    });
+    selectAccount("Account1");
     const deleteButton = screen.getAllByRole("button").at(-1)!;
     fireEvent.click(deleteButton);
 
@@ -215,14 +242,16 @@ describe("BrowsePassword", () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
     renderWithProviders(<BrowsePassword />);
 
-    const select = screen.getByRole("combobox") as HTMLSelectElement;
-    fireEvent.change(select, { target: { value: "Account1" } });
+    selectAccount("Account1");
     const deleteButton = screen.getAllByRole("button").at(-1)!;
     fireEvent.click(deleteButton);
 
     await waitFor(() => {
       expect(mockDeleteAccount).toHaveBeenCalledWith("Account1");
-      expect(select.value).toBe("");
+      // After deletion, the trigger should show the placeholder again
+      expect(
+        screen.getByRole("button", { name: /select account/i }),
+      ).toBeInTheDocument();
     });
   });
 
