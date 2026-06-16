@@ -32,7 +32,7 @@ export default function Dashboard() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="grid grid-cols-1 md:grid-cols-3 gap-6 p-2"
+      className="grid grid-cols-1 md:grid-cols-3 gap-6 p-2 pb-24 md:pb-0"
     >
       {/* AI Bots List */}
       <motion.div variants={staggerItem} className="col-span-2">

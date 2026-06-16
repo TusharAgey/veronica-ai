@@ -51,7 +51,6 @@ export default function App() {
     // so a significant delta reliably indicates the keyboard is open.
     const layoutHeight = window.innerHeight;
     const viewportHeight = vv.height;
-    const offsetTop = vv.offsetTop;
 
     // Only apply keyboard detection on touch-capable devices to avoid
     // treating desktop browser chrome (toolbar, address bar, etc.) as a keyboard.
@@ -75,12 +74,14 @@ export default function App() {
         activeEl.tagName === "TEXTAREA" ||
         (activeEl as HTMLElement).isContentEditable);
 
-    // If the visual viewport is significantly smaller than the layout viewport
-    // AND it's shifted up (keyboard is open), pin the root height.
+    // If the visual viewport is significantly smaller than the layout viewport,
+    // pin the root height. Removed offsetTop check because it's unreliable on
+    // mobile — some browsers report offsetTop=0 even without a keyboard open,
+    // which was causing position:fixed to be applied and breaking touch scroll.
     const diff = layoutHeight - viewportHeight;
-    const keyboardThreshold = 100; // ignore tiny differences (e.g. URL bar)
+    const keyboardThreshold = 150; // ignore tiny differences (e.g. URL bar)
 
-    if (diff > keyboardThreshold && offsetTop === 0 && isEditable) {
+    if (diff > keyboardThreshold && isEditable) {
       // Keyboard is open — pin root to the visual viewport height
       root.style.height = `${viewportHeight}px`;
       root.classList.add("keyboard-open");
@@ -123,7 +124,7 @@ export default function App() {
           </Suspense>
         </>
       ) : (
-        <div className="fixed inset-0 w-full h-full overflow-hidden text-slate-50 bg-black">
+        <div className="fixed inset-0 w-full h-full overflow-y-auto text-slate-50 bg-black">
           <SpatialEnvironment />
 
           {/* UI LAYER */}

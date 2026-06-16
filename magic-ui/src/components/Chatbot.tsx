@@ -82,7 +82,7 @@ export default function Chatbot() {
       <ChatMessageList chats={chatsSoFar} />
       {/* --- PINNED INPUT DOCK (Side-by-side layout) --- */}
       <div
-        className="mt-auto shrink-0 w-full p-4 pb-20 md:pb-6 relative z-10 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent flex flex-col md:flex-row items-end md:items-center gap-3"
+        className="mt-auto shrink-0 w-full p-4 relative z-10 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent flex flex-col md:flex-row items-end md:items-center gap-3"
         style={
           isMobile
             ? { paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }

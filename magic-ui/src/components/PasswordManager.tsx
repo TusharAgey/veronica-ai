@@ -15,7 +15,7 @@ export default function PasswordManager() {
     }
   }, [isError, errorToast]);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-10 gap-6 h-full">
+    <div className="grid grid-cols-1 md:grid-cols-10 gap-6 h-full pb-24 md:pb-0">
       {/* 50% Space (5 out of 10) */}
       <div className="md:col-span-5">
         <AddAccountForm />
