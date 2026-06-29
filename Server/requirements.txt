@@ -1,4 +1,4 @@
-zeroconf == 0.149.12
+zeroconf == 0.149.16
 soundfile == 0.13.1
 kokoro == 0.9.4
 flask == 3.1.3
