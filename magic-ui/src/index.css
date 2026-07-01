@@ -1,0 +1,64 @@
+@import "@fontsource-variable/geist";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --border: 240 3.7% 25%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+  * {
+    @apply border-border;
+  }
+}
+
+/* ── Mobile Keyboard Fix ────────────────────────────────────────
+ * Prevents whitespace scroll above the virtual keyboard when
+ * focusing an input on mobile devices.
+ *
+ * 1. dvh units give us the dynamic viewport height that shrinks
+ *    when the keyboard opens.
+ * 2. overscroll-behavior:none prevents elastic overscroll that
+ *    can reveal whitespace.
+ * 3. The .keyboard-open class is toggled via JS (visualViewport
+ *    API) for the most reliable behaviour across browsers.
+ * ──────────────────────────────────────────────────────────────── */
+html,
+body,
+#root {
+  height: 100%;
+  height: 100dvh;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* When the keyboard is detected, pin the root so it can't scroll */
+#root.keyboard-open {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* height is set dynamically via JS using visualViewport.height */
+}
+
+/* Prevent iOS from adjusting the font-size when rotating */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Remove the tap highlight colour on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Shimmer Animation for Skeleton Loaders ─────────────────── */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

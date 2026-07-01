@@ -2,6 +2,8 @@
 .vscode/
 .idea/
 
+IDEAs.md
+Plan.md
 # Vagrant
 .vagrant/
 
@@ -143,3 +145,14 @@ bower_components
 psd
 thumb
 sketch
+ui/src/views/ChatBot/webserver-testing.js
+ui/src/wave/index.html
+ui/src/wave/siriWave.js
+.gitignore
+ui/src/wave/wave-single.html
+
+# Vitest coverage output
+magic-ui/coverage/
+
+# patch files
+*.patch

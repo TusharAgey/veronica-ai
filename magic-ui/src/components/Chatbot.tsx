@@ -1,0 +1,111 @@
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useAppDispatch, useAppSelector } from "../store/store";
+import {
+  addUserPrompt,
+  updateLatestLlmResponse,
+  removeLastUserPrompt,
+} from "../store/chatsSlice";
+import { useLazyRunLlamaQuery } from "../services/llamaApi";
+import { botPersonality } from "../utilities/const";
+// Extracted Sub-Components
+import { BotSelector } from "./chatbot/BotSelector";
+import { ZapBackdrop } from "./chatbot/Zap";
+import { ChatInput } from "./chatbot/ChatInput";
+import { ChatMessageList } from "./chatbot/ChatMessageList";
+import { chatHistory } from "../utilities/utils";
+import { stopGeneration } from "./chatbot/completion";
+const AVAILABLE_BOTS = ["Code Bot", "Space Pirate"];
+
+export default function Chatbot() {
+  const [activeBot, setActiveBot] = useState(AVAILABLE_BOTS[0]);
+  const dispatch = useAppDispatch();
+  const { sessions } = useAppSelector((state) => state.chats);
+  const chatsSoFar = sessions[activeBot] || [];
+  const [runLlama, result] = useLazyRunLlamaQuery();
+
+  // Only apply safe-area keyboard padding on mobile (touch) devices.
+  // On desktop the md:pb-6 class handles spacing correctly.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  const handleStopQuery = () => {
+    dispatch(removeLastUserPrompt({ bot: activeBot }));
+    stopGeneration();
+  };
+  /**
+   * User submits prompt
+   */
+  const handleSend = async (input: string) => {
+    if (!input.trim()) return;
+    stopGeneration(); // Cancel any inflight request.
+
+    // add user row immediately
+    dispatch(
+      addUserPrompt({
+        bot: activeBot,
+        user: input,
+      }),
+    );
+
+    // trigger stream
+    runLlama({
+      prompt: [
+        ...chatHistory(chatsSoFar),
+        {
+          role: "user",
+          content: input,
+        },
+      ],
+      backstory: botPersonality[activeBot],
+    });
+  };
+  /**
+   * Sync stream output into chat slice
+   */
+  useEffect(() => {
+    if (!result.data) return;
+    dispatch(
+      updateLatestLlmResponse({
+        bot: activeBot,
+        assistant: result.data.content,
+      }),
+    );
+  }, [result.data?.content, activeBot, dispatch]);
+
+  return (
+    <div className="flex flex-col h-full relative overflow-hidden rounded-[2rem]">
+      <ZapBackdrop />
+
+      <ChatMessageList chats={chatsSoFar} />
+      {/* --- PINNED INPUT DOCK (Side-by-side layout) --- */}
+      <div
+        className="mt-auto shrink-0 w-full p-4 relative z-10 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent flex flex-col md:flex-row items-end md:items-center gap-3"
+        style={
+          isMobile
+            ? { paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }
+            : undefined
+        }
+      >
+        {/* BOT SELECTOR */}
+        <BotSelector
+          bots={AVAILABLE_BOTS}
+          activeBot={activeBot}
+          onSelectBot={setActiveBot}
+        />
+
+        {/* CHAT INPUT */}
+        <motion.div layout className="w-full md:flex-1 min-w-0">
+          <ChatInput
+            isFetching={result.data?.streaming}
+            activeBot={activeBot}
+            onSend={handleSend}
+            onCancel={handleStopQuery}
+          />
+        </motion.div>
+      </div>
+    </div>
+  );
+}
