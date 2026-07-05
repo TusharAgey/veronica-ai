@@ -1,11 +1,5 @@
-import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from "@testing-library/react";
+import { beforeEach, describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowsePassword } from "../../../components/password-manager/BrowsePassword";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -19,6 +13,21 @@ const { mockDecryptModern, mockDeleteAccountState, mockDeleteAccount } =
     mockDeleteAccountState: { isError: false, isSuccess: false },
     mockDeleteAccount: vi.fn(() => Promise.resolve({ data: undefined })),
   }));
+
+// Mock inactivity timer — tests control the return values
+const mockInactivity = vi.hoisted(() => ({
+  isCosmeticallyHidden: false,
+  isHardLocked: false,
+  resetActivity: vi.fn(),
+}));
+
+vi.mock("../../../hooks/useInactivityTimer", () => ({
+  useInactivityTimer: () => ({
+    isCosmeticallyHidden: mockInactivity.isCosmeticallyHidden,
+    isHardLocked: mockInactivity.isHardLocked,
+    resetActivity: mockInactivity.resetActivity,
+  }),
+}));
 
 vi.mock("../../../utilities/utils", async () => {
   const actual = await vi.importActual("../../../utilities/utils");
@@ -73,10 +82,7 @@ function renderWithProviders(ui: React.ReactElement) {
 
 /** Find the reveal/hide toggle button (the one with Eye/EyeOff icon) */
 function getRevealButton(): HTMLElement {
-  // The reveal button is the one that contains an SVG with the eye icon
   const buttons = screen.getAllByRole("button");
-  // The reveal button is the one that is NOT the dropdown trigger and NOT a dropdown option
-  // It's the button that has an SVG child with class containing "lucide-eye" or "lucide-eye-off"
   return buttons.find(
     (btn) =>
       btn.querySelector("svg.lucide-eye, svg.lucide-eye-off") !== null ||
@@ -86,23 +92,23 @@ function getRevealButton(): HTMLElement {
 
 /** Helper: open the searchable select dropdown and click the given account name */
 function selectAccount(accountName: string) {
-  // Click the trigger button to open the dropdown
   const trigger = screen.getByRole("button", {
     name: /select account/i,
   });
   fireEvent.click(trigger);
 
-  // Click the desired option in the dropdown
   const option = screen.getByRole("button", { name: accountName });
   fireEvent.click(option);
 }
 
 describe("BrowsePassword", () => {
   beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.clearAllMocks();
     mockDeleteAccountState.isError = false;
     mockDeleteAccountState.isSuccess = false;
+    // Reset inactivity mock to default (not hidden, not locked)
+    mockInactivity.isCosmeticallyHidden = false;
+    mockInactivity.isHardLocked = false;
     Object.assign(navigator, {
       clipboard: {
         writeText: vi.fn(),
@@ -110,9 +116,7 @@ describe("BrowsePassword", () => {
     });
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  // ─── Basic Rendering ───────────────────────────────────────────────
 
   it("renders the title", () => {
     renderWithProviders(<BrowsePassword />);
@@ -137,13 +141,11 @@ describe("BrowsePassword", () => {
 
   it("renders account options in the dropdown", () => {
     renderWithProviders(<BrowsePassword />);
-    // Open the dropdown
     const trigger = screen.getByRole("button", {
       name: /select account/i,
     });
     fireEvent.click(trigger);
 
-    // Now the options should be visible
     expect(
       screen.getByRole("button", { name: "Account1" }),
     ).toBeInTheDocument();
@@ -151,6 +153,8 @@ describe("BrowsePassword", () => {
       screen.getByRole("button", { name: "Account2" }),
     ).toBeInTheDocument();
   });
+
+  // ─── Account Details ───────────────────────────────────────────────
 
   it("shows account details when an account is selected", () => {
     renderWithProviders(<BrowsePassword />);
@@ -161,6 +165,8 @@ describe("BrowsePassword", () => {
     expect(screen.getByText("Test account description")).toBeInTheDocument();
     expect(screen.getByText("2024-01-01")).toBeInTheDocument();
   });
+
+  // ─── Reveal Button State ───────────────────────────────────────────
 
   it("reveal button is disabled when session password is not 16 characters", () => {
     renderWithProviders(<BrowsePassword />);
@@ -178,6 +184,8 @@ describe("BrowsePassword", () => {
     expect(revealButton).toBeEnabled();
   });
 
+  // ─── Password Display ──────────────────────────────────────────────
+
   it("shows masked password when not revealed", () => {
     renderWithProviders(<BrowsePassword />);
     selectAccount("Account1");
@@ -187,7 +195,6 @@ describe("BrowsePassword", () => {
   it("shows Eye icon on the reveal button", () => {
     renderWithProviders(<BrowsePassword />);
     const revealButton = getRevealButton();
-    // The Eye icon is rendered as an SVG inside the button
     const svg = revealButton.querySelector("svg");
     expect(svg).toBeTruthy();
   });
@@ -203,14 +210,14 @@ describe("BrowsePassword", () => {
 
     expect(screen.getByText("Decrypting...")).toBeInTheDocument();
 
-    // Flush the promise from decryptModern
-    await vi.advanceTimersByTimeAsync(0);
-
-    expect(mockDecryptModern).toHaveBeenCalledWith(
-      "encrypted-pass-data",
-      "1234567890123456",
-    );
-    expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
+    // Wait for the decryptModern promise to resolve
+    await waitFor(() => {
+      expect(mockDecryptModern).toHaveBeenCalledWith(
+        "encrypted-pass-data",
+        "1234567890123456",
+      );
+      expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
+    });
   });
 
   it("copies the decrypted password and shows a success toast", async () => {
@@ -222,10 +229,8 @@ describe("BrowsePassword", () => {
     });
     fireEvent.click(getRevealButton());
 
-    // Flush the promise from decryptModern
-    await vi.advanceTimersByTimeAsync(0);
+    await screen.findByText("decrypted-pass");
 
-    // Copy button is the one with a Copy icon (lucide-copy), before the delete button
     const copyButton = screen
       .getAllByRole("button")
       .find((btn) => btn.innerHTML.includes("lucide-copy"))!;
@@ -235,9 +240,11 @@ describe("BrowsePassword", () => {
       "decrypted-pass",
     );
     expect(
-      screen.getByText("Password copied to clipboard!"),
+      await screen.findByText("Password copied to clipboard!"),
     ).toBeInTheDocument();
   });
+
+  // ─── Delete Account ────────────────────────────────────────────────
 
   it("does not delete the selected account when confirmation is cancelled", () => {
     vi.spyOn(window, "confirm").mockReturnValue(false);
@@ -263,7 +270,6 @@ describe("BrowsePassword", () => {
 
     await waitFor(() => {
       expect(mockDeleteAccount).toHaveBeenCalledWith("Account1");
-      // After deletion, the trigger should show the placeholder again
       expect(
         screen.getByRole("button", { name: /select account/i }),
       ).toBeInTheDocument();
@@ -295,8 +301,10 @@ describe("BrowsePassword", () => {
     ).toBeInTheDocument();
   });
 
-  it("auto-hides the password after 1 minute", async () => {
-    renderWithProviders(<BrowsePassword />);
+  // ─── Inactivity-Based Auto-Hide ────────────────────────────────────
+
+  it("hides the password on cosmetic timeout (keeps session password)", async () => {
+    const { rerender } = renderWithProviders(<BrowsePassword />);
 
     selectAccount("Account1");
     fireEvent.change(screen.getByPlaceholderText("Session Password"), {
@@ -304,30 +312,31 @@ describe("BrowsePassword", () => {
     });
     fireEvent.click(getRevealButton());
 
-    // Wait for decryption to complete (flushes the promise microtask)
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-    expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
-
-    // The reveal button should show EyeOff (password is visible)
+    // Wait for decryption
+    await screen.findByText("decrypted-pass");
     expect(getRevealButton().innerHTML).toContain("lucide-eye-off");
 
-    // Advance time by 1 minute to trigger the auto-hide timeout
-    // (the setTimeout is scheduled inside the .then() handler)
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(60000);
-    });
+    // Simulate cosmetic timeout — password display hidden, session stays
+    mockInactivity.isCosmeticallyHidden = true;
+    mockInactivity.isHardLocked = false;
+    rerender(
+      <Provider store={createMockStore()}>
+        <ToastProvider>
+          <BrowsePassword />
+        </ToastProvider>
+      </Provider>,
+    );
 
-    // Password should be masked again
+    // Password should be masked
     expect(screen.getByText("***********")).toBeInTheDocument();
-
-    // The reveal button should show Eye (password is hidden)
+    // Reveal button shows Eye (hidden state)
     expect(getRevealButton().innerHTML).toContain("lucide-eye");
+    // Session password should still be intact (reveal button enabled)
+    expect(getRevealButton()).toBeEnabled();
   });
 
-  it("disables the reveal button after auto-hide timeout clears the session password", async () => {
-    renderWithProviders(<BrowsePassword />);
+  it("clears the session password on hard lock", async () => {
+    const { rerender } = renderWithProviders(<BrowsePassword />);
 
     selectAccount("Account1");
     fireEvent.change(screen.getByPlaceholderText("Session Password"), {
@@ -335,26 +344,29 @@ describe("BrowsePassword", () => {
     });
     fireEvent.click(getRevealButton());
 
-    // Wait for decryption to complete (flushes the promise microtask)
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-
-    // The reveal button should be enabled while password is visible
+    // Wait for decryption
+    await screen.findByText("decrypted-pass");
     expect(getRevealButton()).toBeEnabled();
 
-    // Advance time by 1 minute to trigger the auto-hide timeout
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(60000);
-    });
+    // Simulate hard lock — session password cleared
+    mockInactivity.isCosmeticallyHidden = true;
+    mockInactivity.isHardLocked = true;
+    rerender(
+      <Provider store={createMockStore()}>
+        <ToastProvider>
+          <BrowsePassword />
+        </ToastProvider>
+      </Provider>,
+    );
 
-    // The reveal button should be disabled again because the session
-    // password state was cleared (length is no longer 16)
+    // Password should be masked
+    expect(screen.getByText("***********")).toBeInTheDocument();
+    // Reveal button should be disabled (session password was cleared)
     expect(getRevealButton()).toBeDisabled();
   });
 
-  it("does not auto-hide if component unmounts before timeout", async () => {
-    const { unmount } = renderWithProviders(<BrowsePassword />);
+  it("hides password immediately on cosmetic timeout even without hard lock", async () => {
+    const { rerender } = renderWithProviders(<BrowsePassword />);
 
     selectAccount("Account1");
     fireEvent.change(screen.getByPlaceholderText("Session Password"), {
@@ -362,18 +374,45 @@ describe("BrowsePassword", () => {
     });
     fireEvent.click(getRevealButton());
 
-    // Wait for decryption to complete
-    await vi.advanceTimersByTimeAsync(0);
-    expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
+    // Wait for decryption
+    await screen.findByText("decrypted-pass");
 
-    // Unmount the component before the 1 minute timeout
-    unmount();
+    // Simulate cosmetic-only timeout (hard lock not triggered)
+    mockInactivity.isCosmeticallyHidden = true;
+    mockInactivity.isHardLocked = false;
+    rerender(
+      <Provider store={createMockStore()}>
+        <ToastProvider>
+          <BrowsePassword />
+        </ToastProvider>
+      </Provider>,
+    );
 
-    // Advance time past the timeout — should not throw (cleanup worked)
-    await vi.advanceTimersByTimeAsync(60000);
+    // Password hidden but session still alive
+    expect(screen.getByText("***********")).toBeInTheDocument();
+    expect(getRevealButton()).toBeEnabled();
+  });
 
-    // No assertion needed — the test passes if no error is thrown
-    // (the active flag prevented setState on unmounted component)
-    expect(mockDecryptModern).toHaveBeenCalledTimes(1);
+  it("does not affect non-revealed state when inactivity triggers", () => {
+    const { rerender } = renderWithProviders(<BrowsePassword />);
+
+    // Component rendered with password not revealed
+    selectAccount("Account1");
+
+    // Password is masked initially
+    expect(screen.getByText("***********")).toBeInTheDocument();
+
+    // Simulate cosmetic timeout
+    mockInactivity.isCosmeticallyHidden = true;
+    rerender(
+      <Provider store={createMockStore()}>
+        <ToastProvider>
+          <BrowsePassword />
+        </ToastProvider>
+      </Provider>,
+    );
+
+    // Should still be masked (no change needed)
+    expect(screen.getByText("***********")).toBeInTheDocument();
   });
 });
