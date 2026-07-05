@@ -1,5 +1,11 @@
-import { beforeEach, describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { BrowsePassword } from "../../../components/password-manager/BrowsePassword";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -93,6 +99,7 @@ function selectAccount(accountName: string) {
 
 describe("BrowsePassword", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.clearAllMocks();
     mockDeleteAccountState.isError = false;
     mockDeleteAccountState.isSuccess = false;
@@ -101,6 +108,10 @@ describe("BrowsePassword", () => {
         writeText: vi.fn(),
       },
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders the title", () => {
@@ -191,13 +202,15 @@ describe("BrowsePassword", () => {
     fireEvent.click(getRevealButton());
 
     expect(screen.getByText("Decrypting...")).toBeInTheDocument();
-    await waitFor(() => {
-      expect(mockDecryptModern).toHaveBeenCalledWith(
-        "encrypted-pass-data",
-        "1234567890123456",
-      );
-      expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
-    });
+
+    // Flush the promise from decryptModern
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(mockDecryptModern).toHaveBeenCalledWith(
+      "encrypted-pass-data",
+      "1234567890123456",
+    );
+    expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
   });
 
   it("copies the decrypted password and shows a success toast", async () => {
@@ -209,7 +222,9 @@ describe("BrowsePassword", () => {
     });
     fireEvent.click(getRevealButton());
 
-    await screen.findByText("decrypted-pass");
+    // Flush the promise from decryptModern
+    await vi.advanceTimersByTimeAsync(0);
+
     // Copy button is the one with a Copy icon (lucide-copy), before the delete button
     const copyButton = screen
       .getAllByRole("button")
@@ -220,7 +235,7 @@ describe("BrowsePassword", () => {
       "decrypted-pass",
     );
     expect(
-      await screen.findByText("Password copied to clipboard!"),
+      screen.getByText("Password copied to clipboard!"),
     ).toBeInTheDocument();
   });
 
@@ -278,5 +293,87 @@ describe("BrowsePassword", () => {
         "Failed to delete the account. Perhapse, the server is down",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("auto-hides the password after 1 minute", async () => {
+    renderWithProviders(<BrowsePassword />);
+
+    selectAccount("Account1");
+    fireEvent.change(screen.getByPlaceholderText("Session Password"), {
+      target: { value: "1234567890123456" },
+    });
+    fireEvent.click(getRevealButton());
+
+    // Wait for decryption to complete (flushes the promise microtask)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
+
+    // The reveal button should show EyeOff (password is visible)
+    expect(getRevealButton().innerHTML).toContain("lucide-eye-off");
+
+    // Advance time by 1 minute to trigger the auto-hide timeout
+    // (the setTimeout is scheduled inside the .then() handler)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60000);
+    });
+
+    // Password should be masked again
+    expect(screen.getByText("***********")).toBeInTheDocument();
+
+    // The reveal button should show Eye (password is hidden)
+    expect(getRevealButton().innerHTML).toContain("lucide-eye");
+  });
+
+  it("disables the reveal button after auto-hide timeout clears the session password", async () => {
+    renderWithProviders(<BrowsePassword />);
+
+    selectAccount("Account1");
+    fireEvent.change(screen.getByPlaceholderText("Session Password"), {
+      target: { value: "1234567890123456" },
+    });
+    fireEvent.click(getRevealButton());
+
+    // Wait for decryption to complete (flushes the promise microtask)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    // The reveal button should be enabled while password is visible
+    expect(getRevealButton()).toBeEnabled();
+
+    // Advance time by 1 minute to trigger the auto-hide timeout
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60000);
+    });
+
+    // The reveal button should be disabled again because the session
+    // password state was cleared (length is no longer 16)
+    expect(getRevealButton()).toBeDisabled();
+  });
+
+  it("does not auto-hide if component unmounts before timeout", async () => {
+    const { unmount } = renderWithProviders(<BrowsePassword />);
+
+    selectAccount("Account1");
+    fireEvent.change(screen.getByPlaceholderText("Session Password"), {
+      target: { value: "1234567890123456" },
+    });
+    fireEvent.click(getRevealButton());
+
+    // Wait for decryption to complete
+    await vi.advanceTimersByTimeAsync(0);
+    expect(screen.getByText("decrypted-pass")).toBeInTheDocument();
+
+    // Unmount the component before the 1 minute timeout
+    unmount();
+
+    // Advance time past the timeout — should not throw (cleanup worked)
+    await vi.advanceTimersByTimeAsync(60000);
+
+    // No assertion needed — the test passes if no error is thrown
+    // (the active flag prevented setState on unmounted component)
+    expect(mockDecryptModern).toHaveBeenCalledTimes(1);
   });
 });

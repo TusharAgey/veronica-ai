@@ -54,6 +54,11 @@ export function BrowsePassword() {
     decryptModern(accountDetails.password, sessionPasword).then((pass) => {
       if (active) {
         setDecryptedPassword(pass);
+        setTimeout(() => {
+          setSessionPassword("");
+          setDecryptedPassword("***********");
+          setIsRevealed(false);
+        }, 60000); // Hide the password after 1 minute.
       }
     });
 
