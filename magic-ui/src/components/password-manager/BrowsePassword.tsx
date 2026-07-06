@@ -10,6 +10,7 @@ import {
 } from "@/services/api";
 import { decryptModern } from "../../utilities/utils";
 import { useToast } from "../../context/ToastContext";
+import { useInactivityTimer } from "../../hooks/useInactivityTimer";
 
 export function BrowsePassword() {
   const { data: accounts = [] } = useGetAccountsQuery();
@@ -26,6 +27,32 @@ export function BrowsePassword() {
     useState<string>("***********");
 
   const { error: errorToast, success: successToast } = useToast();
+
+  // Two-tier inactivity tracking:
+  //   cosmeticTimeout (30s) — hides the displayed password, keeps session alive
+  //   hardTimeout (1min)    — clears the session password entirely
+  //   tab visibility loss   — immediate hard lock
+  const { isCosmeticallyHidden, isHardLocked } = useInactivityTimer({
+    cosmeticTimeout: 30_000,
+    hardTimeout: 60_000,
+  });
+
+  // Effect 1: Hard lock — clear session password
+  useEffect(() => {
+    if (isHardLocked) {
+      setSessionPassword("");
+      setDecryptedPassword("***********");
+      setIsRevealed(false);
+    }
+  }, [isHardLocked]);
+
+  // Effect 2: Cosmetic hide — mask password display, keep session password
+  useEffect(() => {
+    if (isCosmeticallyHidden && isRevealed) {
+      setDecryptedPassword("***********");
+      setIsRevealed(false);
+    }
+  }, [isCosmeticallyHidden, isRevealed]);
 
   useEffect(() => {
     if (isError) {
@@ -61,6 +88,7 @@ export function BrowsePassword() {
       active = false;
     };
   }, [isRevealed, accountDetails?.password]);
+
   const passwordShowButtonDisabled =
     !selectedAccount ||
     selectedAccount === "Select account..." ||
